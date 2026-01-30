@@ -1,0 +1,35 @@
+{
+  "name": "cs136-study",
+  "version": "1.0.0",
+  "description": "Gamified CS136 study terminal with spaced repetition",
+  "main": "src/index.js",
+  "bin": {
+    "study": "./src/index.js"
+  },
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --platform=node --outfile=dist/app.mjs --format=esm --jsx=automatic --loader:.js=jsx --external:better-sqlite3 --external:@anthropic-ai/sdk --define:process.env.NODE_ENV=\\\"production\\\" --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\"",
+    "start": "npm run build && NODE_ENV=production node dist/app.mjs",
+    "dev": "npm run build && NODE_ENV=production node dist/app.mjs",
+    "test": "node --test src/**/*.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.72.1",
+    "@inkjs/ui": "^2.0.0",
+    "better-sqlite3": "^12.6.2",
+    "chalk": "^5.6.2",
+    "dotenv": "^17.2.3",
+    "ink": "^6.6.0",
+    "ink-select-input": "^6.2.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.2.4",
+    "react-devtools-core": "^6.1.5"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.2"
+  }
+}
