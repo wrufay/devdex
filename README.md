@@ -1,5 +1,4 @@
-# Anki, but for CS136 as a CLI tool
-
+# CLI Anki, but for your CS136 lecture notes
 
 ## Setup instructions
 
