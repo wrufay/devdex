@@ -1,7 +1,7 @@
 {
-  "name": "cs136-study",
+  "name": "study-terminal",
   "version": "1.0.0",
-  "description": "Gamified CS136 study terminal with spaced repetition",
+  "description": "Gamified study terminal with AI-generated flashcards and spaced repetition",
   "main": "src/index.js",
   "bin": {
     "study": "./src/index.js"

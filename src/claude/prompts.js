@@ -1,4 +1,4 @@
-export const FLASHCARD_GENERATION_PROMPT = `You are an expert CS tutor creating study materials from a CS136 lecture PDF.
+export const FLASHCARD_GENERATION_PROMPT = `You are an expert tutor creating study materials from educational content.
 
 Analyze this PDF and generate study materials. Return ONLY valid JSON with this exact structure:
 
@@ -40,7 +40,7 @@ Guidelines:
 - Make wrong MCQ choices plausible (common student misconceptions)
 - Tag each card with relevant subtopics
 - Difficulty mix: ~30% easy, ~50% medium, ~20% hard
-- For C/pointer content: focus on memory layout, dereferencing, address-of, aliasing, NULL, const, function pointers
-- Include code snippets in questions where relevant
+- Include code snippets, diagrams, or formulas in questions where relevant
+- Adapt to the subject matter (CS, biology, history, math, etc.)
 
 Return ONLY the JSON. No markdown fences, no extra text.`;

@@ -15,7 +15,7 @@ export default function Header() {
   return (
     <Box flexDirection="column" borderStyle="double" borderColor="blue" paddingX={1}>
       <Box justifyContent="space-between">
-        <Text bold color="cyan">CS136 Study Terminal</Text>
+        <Text bold color="cyan">Study Terminal</Text>
         <Text>
           <Text color="yellow">Lv.{levelInfo.level}</Text>
           <Text color="gray"> {title}</Text>
