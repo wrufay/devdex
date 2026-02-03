@@ -29,3 +29,10 @@ npm start
 ```
 
 ### ENJOY ! 🩶
+
+## TODO / Roadmap
+
+- [ ] Custom AI instructions when importing PDFs (e.g., "focus on definitions", "include more code examples")
+- [ ] Edit existing flashcards
+- [ ] Add personal notes to flashcards (mnemonic devices, additional context)
+- [ ] Type-in answer mode (practice articulating answers before revealing)

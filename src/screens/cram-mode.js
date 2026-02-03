@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Text } from 'ink';
+import React, { useState } from 'react';
+import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import Header from '../components/header.js';
 import { getAllDecks, getCardsByDeck } from '../db/queries.js';
@@ -17,20 +17,11 @@ export default function CramMode({ onBack }) {
 
   const decks = getAllDecks();
 
-  useEffect(() => {
-    const handleInput = (_, key) => {
-      if (step === 'cramming' && !showAnswer) {
-        if (key.return) {
-          setShowAnswer(true);
-        }
-      }
-    };
-
-    if (typeof process !== 'undefined' && process.stdin) {
-      process.stdin.on('keypress', handleInput);
-      return () => process.stdin.removeListener('keypress', handleInput);
+  useInput((input, key) => {
+    if (step === 'cramming' && !showAnswer && key.return) {
+      setShowAnswer(true);
     }
-  }, [step, showAnswer]);
+  });
 
   if (step === 'deck-select') {
     if (decks.length === 0) {
