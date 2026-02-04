@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
 import Header from '../components/header.js';
@@ -13,6 +13,12 @@ export default function CreateCard({ onNavigate }) {
   const [back, setBack] = useState('');
 
   const decks = getAllDecks();
+
+  useInput((input, key) => {
+    if (key.escape) {
+      onNavigate('menu');
+    }
+  });
 
   if (step === 'deck-select') {
     const items = [

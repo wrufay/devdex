@@ -14,10 +14,15 @@ export default function CramMode({ onBack }) {
   const [round, setRound] = useState(1);
   const [totalReviewed, setTotalReviewed] = useState(0);
   const [firstTryCorrect, setFirstTryCorrect] = useState(0);
+  const [originalCardCount, setOriginalCardCount] = useState(0);
 
   const decks = getAllDecks();
 
   useInput((input, key) => {
+    if (key.escape) {
+      onBack();
+      return;
+    }
     if (step === 'cramming' && !showAnswer && key.return) {
       setShowAnswer(true);
     }
@@ -75,6 +80,7 @@ export default function CramMode({ onBack }) {
                 // Shuffle cards
                 const shuffled = allCards.sort(() => Math.random() - 0.5);
                 setCards(shuffled);
+                setOriginalCardCount(shuffled.length);
                 setStep('cramming');
               }
             }}
@@ -177,7 +183,7 @@ export default function CramMode({ onBack }) {
   }
 
   if (step === 'complete') {
-    const accuracy = totalReviewed > 0 ? Math.round((firstTryCorrect / cards.length) * 100) : 0;
+    const accuracy = originalCardCount > 0 ? Math.round((firstTryCorrect / originalCardCount) * 100) : 0;
 
     return (
       <Box flexDirection="column">
@@ -189,7 +195,7 @@ export default function CramMode({ onBack }) {
           <Text color="cyan">Deck: {selectedDeck.name}</Text>
         </Box>
         <Box marginBottom={1} paddingX={1}>
-          <Text>Total cards: {cards.length}</Text>
+          <Text>Total cards: {originalCardCount}</Text>
         </Box>
         <Box marginBottom={1} paddingX={1}>
           <Text>Rounds needed: {round}</Text>
@@ -213,6 +219,7 @@ export default function CramMode({ onBack }) {
                 setRound(1);
                 setTotalReviewed(0);
                 setFirstTryCorrect(0);
+                setOriginalCardCount(0);
                 setSelectedDeck(null);
               } else {
                 onBack();
