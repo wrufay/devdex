@@ -4,7 +4,7 @@
 
 1. Clone this repo
 ```bash
-git clone https://github.com/<your-username-here>/cli_136.git
+git clone https://github.com/wrufay/cli_136.git
 ```
 
 2. Make `.env` file following `.env.example`:
