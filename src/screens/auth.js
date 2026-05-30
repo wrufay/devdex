@@ -1,82 +1,133 @@
-import React, { useState } from 'react';
-import { Box, Text, useInput } from 'ink';
-import TextInput from 'ink-text-input';
-import SelectInput from 'ink-select-input';
+import React, { useState, useEffect } from 'react';
+import { Box, Text } from 'ink';
+import { createServer } from 'http';
+import { exec } from 'child_process';
 import { supabase } from '../db/connection.js';
 
-export default function Auth({ onAuth }) {
-  const [mode, setMode] = useState('select'); // select | login | signup
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [field, setField] = useState('email'); // email | password
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+const CALLBACK_PORT = 54321;
 
-  useInput((input, key) => {
-    if (loading) return;
-    if (mode === 'select') return;
+function openBrowser(url) {
+  const cmd = process.platform === 'win32' ? `start "${url}"` : `open "${url}"`;
+  exec(cmd);
+}
 
-    if (key.return) {
-      if (field === 'email') {
-        setField('password');
+async function startCallbackServer() {
+  return new Promise((resolve, reject) => {
+    const server = createServer((req, res) => {
+      const url = new URL(req.url, `http://localhost:${CALLBACK_PORT}`);
+      const code = url.searchParams.get('code');
+
+      // If no code in query params, serve a page that extracts it from the hash fragment
+      if (!code) {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(`
+          <html>
+            <body style="font-family:monospace;background:#000;color:#0f0;padding:40px">
+              <h2>Completing auth...</h2>
+              <script>
+                const params = new URLSearchParams(window.location.hash.slice(1));
+                const code = params.get('code') || new URLSearchParams(window.location.search).get('code');
+                if (code) {
+                  fetch('/?code=' + code).then(() => {
+                    document.body.innerHTML = '<h2>Auth successful!</h2><p>You can close this tab.</p>';
+                  });
+                }
+              </script>
+            </body>
+          </html>
+        `);
         return;
       }
-      if (field === 'password') {
-        handleSubmit();
-      }
-    }
 
-    if (key.escape) {
-      setMode('select');
-      setEmail('');
-      setPassword('');
-      setField('email');
-      setError('');
-    }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(`
+        <html>
+          <body style="font-family:monospace;background:#000;color:#0f0;padding:40px">
+            <h2>Auth successful!</h2>
+            <p>You can close this tab and return to the terminal.</p>
+          </body>
+        </html>
+      `);
+
+      server.close();
+      resolve(code);
+    });
+
+    server.on('error', reject);
+    server.listen(CALLBACK_PORT);
   });
+}
 
-  const handleSubmit = async () => {
-    if (!email || !password) {
-      setError('Email and password are required.');
-      return;
-    }
-    setLoading(true);
+export default function Auth({ onAuth }) {
+  const [status, setStatus] = useState('idle'); // idle | waiting | error
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) onAuth();
+    });
+  }, []);
+
+  const handleLogin = async () => {
+    setStatus('waiting');
     setError('');
 
-    if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-      } else {
-        onAuth();
-      }
-    } else {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-      } else {
-        onAuth();
-      }
+    try {
+      const codePromise = startCallbackServer();
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `http://localhost:${CALLBACK_PORT}`,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) throw error;
+
+      openBrowser(data.url);
+
+      const code = await codePromise;
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+      if (exchangeError) throw exchangeError;
+
+      onAuth();
+    } catch (err) {
+      setError(err.message);
+      setStatus('error');
     }
   };
 
-  if (mode === 'select') {
+  useEffect(() => {
+    if (status === 'idle') handleLogin();
+  }, []);
+
+  if (status === 'waiting') {
     return (
       <Box flexDirection="column" paddingX={2} marginTop={2}>
-        <Box borderStyle="double" borderColor="blue" paddingX={2} paddingY={0} marginBottom={2}>
+        <Box borderStyle="double" borderColor="blue" paddingX={2} marginBottom={2}>
           <Text bold color="cyan">Study Terminal</Text>
         </Box>
-        <Text bold color="white">Welcome! Please log in or sign up.</Text>
+        <Text bold color="white">Opening GitHub in your browser...</Text>
         <Box marginTop={1}>
-          <SelectInput
-            items={[
-              { label: 'Log In', value: 'login' },
-              { label: 'Sign Up', value: 'signup' },
-            ]}
-            onSelect={(item) => setMode(item.value)}
-          />
+          <Text color="gray">Waiting for authorization. Complete it in your browser to continue.</Text>
+        </Box>
+        <Box marginTop={1}>
+          <Text color="gray" dimColor>The browser should open automatically.</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <Box flexDirection="column" paddingX={2} marginTop={2}>
+        <Box borderStyle="double" borderColor="red" paddingX={2} marginBottom={2}>
+          <Text bold color="red">Auth Failed</Text>
+        </Box>
+        <Text color="red">{error}</Text>
+        <Box marginTop={1}>
+          <Text color="gray">Restart the app to try again.</Text>
         </Box>
       </Box>
     );
@@ -85,35 +136,9 @@ export default function Auth({ onAuth }) {
   return (
     <Box flexDirection="column" paddingX={2} marginTop={2}>
       <Box borderStyle="double" borderColor="blue" paddingX={2} marginBottom={2}>
-        <Text bold color="cyan">{mode === 'login' ? 'Log In' : 'Sign Up'}</Text>
+        <Text bold color="cyan">Study Terminal</Text>
       </Box>
-
-      <Box marginBottom={1}>
-        <Text color={field === 'email' ? 'cyan' : 'gray'}>Email: </Text>
-        {field === 'email'
-          ? <TextInput value={email} onChange={setEmail} />
-          : <Text>{email}</Text>
-        }
-      </Box>
-
-      <Box marginBottom={1}>
-        <Text color={field === 'password' ? 'cyan' : 'gray'}>Password: </Text>
-        {field === 'password'
-          ? <TextInput value={password} onChange={setPassword} mask="*" />
-          : <Text>{password ? '••••••••' : ''}</Text>
-        }
-      </Box>
-
-      {error && (
-        <Box marginBottom={1}>
-          <Text color="red">{error}</Text>
-        </Box>
-      )}
-
-      {loading
-        ? <Text color="gray">Loading...</Text>
-        : <Text color="gray">Press Enter to continue • ESC to go back</Text>
-      }
+      <Text color="gray">Connecting...</Text>
     </Box>
   );
 }
