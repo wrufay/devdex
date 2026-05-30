@@ -1,32 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import Header from '../components/header.js';
 import { getAllDecks, getCardsByDeck } from '../db/queries.js';
 
 export default function CramMode({ onBack }) {
-  const [step, setStep] = useState('deck-select'); // deck-select | cramming | complete
+  const [step, setStep] = useState('deck-select');
+  const [decks, setDecks] = useState([]);
+  const [loaded, setLoaded] = useState(false);
   const [selectedDeck, setSelectedDeck] = useState(null);
   const [cards, setCards] = useState([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [incorrectCards, setIncorrectCards] = useState([]);
   const [round, setRound] = useState(1);
-  const [totalReviewed, setTotalReviewed] = useState(0);
   const [firstTryCorrect, setFirstTryCorrect] = useState(0);
   const [originalCardCount, setOriginalCardCount] = useState(0);
 
-  const decks = getAllDecks();
+  useEffect(() => {
+    getAllDecks().then(d => { setDecks(d); setLoaded(true); });
+  }, []);
 
-  useInput((input, key) => {
-    if (key.escape) {
-      onBack();
-      return;
-    }
-    if (step === 'cramming' && !showAnswer && key.return) {
-      setShowAnswer(true);
-    }
+  useInput((_input, key) => {
+    if (key.escape) { onBack(); return; }
+    if (step === 'cramming' && !showAnswer && key.return) setShowAnswer(true);
   });
+
+  if (!loaded) return <Box paddingX={1}><Text>Loading...</Text></Box>;
 
   if (step === 'deck-select') {
     if (decks.length === 0) {
@@ -34,25 +34,14 @@ export default function CramMode({ onBack }) {
         <Box flexDirection="column">
           <Header />
           <Box marginTop={1} paddingX={1}>
-            <Text color="red">No decks found. Import a PDF or create cards first.</Text>
+            <Text color="red">No decks found. Create some cards first.</Text>
           </Box>
           <Box marginTop={2} paddingX={1}>
-            <SelectInput
-              items={[{ label: '← Back to Menu', value: 'back' }]}
-              onSelect={() => onBack()}
-            />
+            <SelectInput items={[{ label: '← Back to Menu', value: 'back' }]} onSelect={() => onBack()} />
           </Box>
         </Box>
       );
     }
-
-    const items = [
-      ...decks.map(d => ({
-        label: `${d.name} (${d.card_count} cards)`,
-        value: d.id
-      })),
-      { label: '← Back to Menu', value: 'back' }
-    ];
 
     return (
       <Box flexDirection="column">
@@ -65,24 +54,20 @@ export default function CramMode({ onBack }) {
         </Box>
         <Box paddingX={1}>
           <SelectInput
-            items={items}
-            onSelect={(item) => {
-              if (item.value === 'back') {
-                onBack();
-              } else {
-                const deck = decks.find(d => d.id === item.value);
-                setSelectedDeck(deck);
-                const allCards = getCardsByDeck(item.value).filter(c => c.type !== 'mcq');
-                if (allCards.length === 0) {
-                  onBack();
-                  return;
-                }
-                // Shuffle cards
-                const shuffled = allCards.sort(() => Math.random() - 0.5);
-                setCards(shuffled);
-                setOriginalCardCount(shuffled.length);
-                setStep('cramming');
-              }
+            items={[
+              ...decks.map(d => ({ label: `${d.name} (${d.card_count} cards)`, value: d.id })),
+              { label: '← Back to Menu', value: 'back' },
+            ]}
+            onSelect={async (item) => {
+              if (item.value === 'back') { onBack(); return; }
+              const deck = decks.find(d => d.id === item.value);
+              const allCards = (await getCardsByDeck(item.value)).filter(c => c.type !== 'mcq');
+              if (allCards.length === 0) { onBack(); return; }
+              const shuffled = [...allCards].sort(() => Math.random() - 0.5);
+              setSelectedDeck(deck);
+              setCards(shuffled);
+              setOriginalCardCount(shuffled.length);
+              setStep('cramming');
             }}
           />
         </Box>
@@ -92,21 +77,17 @@ export default function CramMode({ onBack }) {
 
   if (step === 'cramming') {
     if (currentCardIndex >= cards.length) {
-      // Round complete
       if (incorrectCards.length === 0) {
-        // All cards mastered!
         setStep('complete');
         return null;
-      } else {
-        // Start new round with incorrect cards
-        const shuffled = incorrectCards.sort(() => Math.random() - 0.5);
-        setCards(shuffled);
-        setIncorrectCards([]);
-        setCurrentCardIndex(0);
-        setShowAnswer(false);
-        setRound(round + 1);
-        return null;
       }
+      const shuffled = [...incorrectCards].sort(() => Math.random() - 0.5);
+      setCards(shuffled);
+      setIncorrectCards([]);
+      setCurrentCardIndex(0);
+      setShowAnswer(false);
+      setRound(round + 1);
+      return null;
     }
 
     const card = cards[currentCardIndex];
@@ -116,10 +97,7 @@ export default function CramMode({ onBack }) {
         <Box flexDirection="column">
           <Header />
           <Box marginTop={1} paddingX={1}>
-            <Text>
-              <Text color="magenta" bold>Cram Mode</Text>
-              <Text color="gray"> - {selectedDeck.name}</Text>
-            </Text>
+            <Text><Text color="magenta" bold>Cram Mode</Text><Text color="gray"> - {selectedDeck.name}</Text></Text>
           </Box>
           <Box paddingX={1}>
             <Text color="gray">
@@ -141,10 +119,7 @@ export default function CramMode({ onBack }) {
       <Box flexDirection="column">
         <Header />
         <Box marginTop={1} paddingX={1}>
-          <Text>
-            <Text color="magenta" bold>Cram Mode</Text>
-            <Text color="gray"> - {selectedDeck.name}</Text>
-          </Text>
+          <Text><Text color="magenta" bold>Cram Mode</Text><Text color="gray"> - {selectedDeck.name}</Text></Text>
         </Box>
         <Box paddingX={1}>
           <Text color="gray">
@@ -162,18 +137,15 @@ export default function CramMode({ onBack }) {
           <SelectInput
             items={[
               { label: '✓ I know this', value: 'correct' },
-              { label: '✗ Review again', value: 'incorrect' }
+              { label: '✗ Review again', value: 'incorrect' },
             ]}
             onSelect={(item) => {
-              setTotalReviewed(totalReviewed + 1);
               if (item.value === 'correct') {
-                if (round === 1) {
-                  setFirstTryCorrect(firstTryCorrect + 1);
-                }
+                if (round === 1) setFirstTryCorrect(prev => prev + 1);
               } else {
-                setIncorrectCards([...incorrectCards, card]);
+                setIncorrectCards(prev => [...prev, card]);
               }
-              setCurrentCardIndex(currentCardIndex + 1);
+              setCurrentCardIndex(prev => prev + 1);
               setShowAnswer(false);
             }}
           />
@@ -184,30 +156,21 @@ export default function CramMode({ onBack }) {
 
   if (step === 'complete') {
     const accuracy = originalCardCount > 0 ? Math.round((firstTryCorrect / originalCardCount) * 100) : 0;
-
     return (
       <Box flexDirection="column">
         <Header />
         <Box marginTop={1} marginBottom={1} paddingX={1}>
-          <Text bold color="green">🎉 Cram Session Complete!</Text>
+          <Text bold color="green">Cram Session Complete!</Text>
         </Box>
-        <Box marginBottom={1} paddingX={1}>
-          <Text color="cyan">Deck: {selectedDeck.name}</Text>
-        </Box>
-        <Box marginBottom={1} paddingX={1}>
-          <Text>Total cards: {originalCardCount}</Text>
-        </Box>
-        <Box marginBottom={1} paddingX={1}>
-          <Text>Rounds needed: {round}</Text>
-        </Box>
-        <Box marginBottom={1} paddingX={1}>
-          <Text>First-try accuracy: {accuracy}%</Text>
-        </Box>
+        <Box marginBottom={1} paddingX={1}><Text color="cyan">Deck: {selectedDeck.name}</Text></Box>
+        <Box marginBottom={1} paddingX={1}><Text>Total cards: {originalCardCount}</Text></Box>
+        <Box marginBottom={1} paddingX={1}><Text>Rounds needed: {round}</Text></Box>
+        <Box marginBottom={1} paddingX={1}><Text>First-try accuracy: {accuracy}%</Text></Box>
         <Box marginTop={2} paddingX={1}>
           <SelectInput
             items={[
               { label: 'Cram Another Deck', value: 'again' },
-              { label: 'Back to Menu', value: 'menu' }
+              { label: 'Back to Menu', value: 'menu' },
             ]}
             onSelect={(item) => {
               if (item.value === 'again') {
@@ -217,7 +180,6 @@ export default function CramMode({ onBack }) {
                 setShowAnswer(false);
                 setIncorrectCards([]);
                 setRound(1);
-                setTotalReviewed(0);
                 setFirstTryCorrect(0);
                 setOriginalCardCount(0);
                 setSelectedDeck(null);

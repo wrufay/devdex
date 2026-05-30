@@ -1,42 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
 import Header from '../components/header.js';
-import { createDeck, createCard, getAllDecks, updateDeckCardCount, addXp } from '../db/queries.js';
+import { createDeck, createCard, getAllDecks, addXp } from '../db/queries.js';
 
 export default function CreateCard({ onNavigate }) {
-  const [step, setStep] = useState('deck-select'); // deck-select | new-deck | front | back | success
+  const [step, setStep] = useState('deck-select');
+  const [decks, setDecks] = useState([]);
   const [deckId, setDeckId] = useState(null);
   const [newDeckName, setNewDeckName] = useState('');
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
 
-  const decks = getAllDecks();
+  useEffect(() => {
+    getAllDecks().then(setDecks);
+  }, []);
 
-  useInput((input, key) => {
-    if (key.escape) {
-      onNavigate('menu');
-    }
+  useInput((_input, key) => {
+    if (key.escape) onNavigate('menu');
   });
 
   if (step === 'deck-select') {
     const items = [
       ...decks.map(d => ({ label: `${d.name} (${d.card_count} cards)`, value: d.id })),
       { label: '+ Create New Deck', value: 'new' },
-      { label: '← Back to Menu', value: 'back' }
+      { label: '← Back to Menu', value: 'back' },
     ];
-
-    const handleSelect = (item) => {
-      if (item.value === 'back') {
-        onNavigate('menu');
-      } else if (item.value === 'new') {
-        setStep('new-deck');
-      } else {
-        setDeckId(item.value);
-        setStep('front');
-      }
-    };
 
     return (
       <Box flexDirection="column">
@@ -48,7 +38,15 @@ export default function CreateCard({ onNavigate }) {
           <Text color="gray">Select a deck or create a new one:</Text>
         </Box>
         <Box paddingX={1}>
-          <SelectInput items={items} onSelect={handleSelect} />
+          <SelectInput
+            items={items}
+            onSelect={(item) => {
+              if (item.value === 'back') { onNavigate('menu'); return; }
+              if (item.value === 'new') { setStep('new-deck'); return; }
+              setDeckId(item.value);
+              setStep('front');
+            }}
+          />
         </Box>
       </Box>
     );
@@ -68,12 +66,11 @@ export default function CreateCard({ onNavigate }) {
           <TextInput
             value={newDeckName}
             onChange={setNewDeckName}
-            onSubmit={(value) => {
-              if (value.trim()) {
-                const id = createDeck(value.trim(), 'manual', value.trim());
-                setDeckId(id);
-                setStep('front');
-              }
+            onSubmit={async (value) => {
+              if (!value.trim()) return;
+              const id = await createDeck(value.trim(), value.trim());
+              setDeckId(id);
+              setStep('front');
             }}
           />
         </Box>
@@ -98,11 +95,7 @@ export default function CreateCard({ onNavigate }) {
           <TextInput
             value={front}
             onChange={setFront}
-            onSubmit={(value) => {
-              if (value.trim()) {
-                setStep('back');
-              }
-            }}
+            onSubmit={(value) => { if (value.trim()) setStep('back'); }}
           />
         </Box>
         <Box marginTop={1} paddingX={1}>
@@ -129,17 +122,11 @@ export default function CreateCard({ onNavigate }) {
           <TextInput
             value={back}
             onChange={setBack}
-            onSubmit={(value) => {
-              if (value.trim()) {
-                // Create the card
-                createCard(deckId, 'flashcard', front.trim(), value.trim(), {
-                  tags: ['manual'],
-                  difficultyTier: 'medium'
-                });
-                updateDeckCardCount(deckId);
-                addXp(5); // Small XP reward for creating a card
-                setStep('success');
-              }
+            onSubmit={async (value) => {
+              if (!value.trim()) return;
+              await createCard(deckId, 'flashcard', front.trim(), value.trim(), { tags: ['manual'] });
+              await addXp(5);
+              setStep('success');
             }}
           />
         </Box>
@@ -155,7 +142,7 @@ export default function CreateCard({ onNavigate }) {
       <Box flexDirection="column">
         <Header />
         <Box marginTop={1} marginBottom={1} paddingX={1}>
-          <Text bold color="green">✓ Flashcard Created!</Text>
+          <Text bold color="green">Flashcard Created!</Text>
         </Box>
         <Box marginBottom={1} paddingX={1}>
           <Text color="gray">Front: {front}</Text>
@@ -170,13 +157,11 @@ export default function CreateCard({ onNavigate }) {
           <SelectInput
             items={[
               { label: 'Create Another Card', value: 'again' },
-              { label: 'Back to Menu', value: 'menu' }
+              { label: 'Back to Menu', value: 'menu' },
             ]}
             onSelect={(item) => {
               if (item.value === 'again') {
-                setFront('');
-                setBack('');
-                setStep('deck-select');
+                setFront(''); setBack(''); setStep('deck-select');
               } else {
                 onNavigate('menu');
               }

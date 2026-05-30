@@ -15,29 +15,23 @@ export default function QuizMode({ onBack }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const mcqs = getMcqCards(null, 10);
-    setQuestions(mcqs);
-    setLoaded(true);
-    if (mcqs.length > 0) {
-      updateStreak();
-    }
+    const load = async () => {
+      const mcqs = await getMcqCards(null, 10);
+      setQuestions(mcqs);
+      setLoaded(true);
+      if (mcqs.length > 0) updateStreak().catch(console.error);
+    };
+    load();
   }, []);
 
   useInput((input, key) => {
-    if (key.escape) {
-      onBack();
-      return;
-    }
-    if (done && key.return) {
-      onBack();
-      return;
-    }
+    if (key.escape) { onBack(); return; }
+    if (done && key.return) { onBack(); return; }
     if (answered && key.return) {
       if (currentIndex + 1 >= questions.length) {
-        incrementSessionCount();
-        // Bonus for perfect score
+        incrementSessionCount().catch(console.error);
         if (score + (selectedAnswer === questions[currentIndex].correct_choice ? 1 : 0) === questions.length) {
-          addXp(XP_VALUES.QUIZ_PERFECT_SCORE);
+          addXp(XP_VALUES.QUIZ_PERFECT_SCORE).catch(console.error);
           setXpEarned(prev => prev + XP_VALUES.QUIZ_PERFECT_SCORE);
         }
         setDone(true);
@@ -49,9 +43,7 @@ export default function QuizMode({ onBack }) {
     }
   });
 
-  if (!loaded) {
-    return <Box paddingX={1}><Text>Loading quiz...</Text></Box>;
-  }
+  if (!loaded) return <Box paddingX={1}><Text>Loading quiz...</Text></Box>;
 
   if (questions.length === 0) {
     return (
@@ -59,7 +51,7 @@ export default function QuizMode({ onBack }) {
         <Box borderStyle="single" borderColor="yellow" paddingX={1} marginBottom={1}>
           <Text bold color="yellow">No Quiz Questions</Text>
         </Box>
-        <Text>Import a PDF first to generate quiz questions.</Text>
+        <Text>Create some MCQ cards first.</Text>
         <Box marginTop={1}><Text color="gray">Press ESC to go back</Text></Box>
       </Box>
     );
@@ -83,34 +75,24 @@ export default function QuizMode({ onBack }) {
   }
 
   const q = questions[currentIndex];
-  const choices = JSON.parse(q.choices || '[]');
+  const choices = Array.isArray(q.choices) ? q.choices : JSON.parse(q.choices || '[]');
 
   if (!answered) {
-    const items = choices.map((choice, i) => ({
-      label: choice,
-      value: i,
-    }));
-
     return (
       <Box flexDirection="column" paddingX={1}>
         <Box borderStyle="single" borderColor="magenta" paddingX={1} justifyContent="space-between">
           <Text bold color="magenta">Quiz</Text>
           <Text color="gray">Q{currentIndex + 1}/{questions.length} | Score: {score}</Text>
         </Box>
-
-        <Box marginTop={1}>
-          <Text bold color="white">{q.front}</Text>
-        </Box>
-
+        <Box marginTop={1}><Text bold color="white">{q.front}</Text></Box>
         <Box marginTop={1}>
           <SelectInput
-            items={items}
+            items={choices.map((choice, i) => ({ label: choice, value: i }))}
             onSelect={(item) => {
               setSelectedAnswer(item.value);
-              const isCorrect = item.value === q.correct_choice;
-              if (isCorrect) {
+              if (item.value === q.correct_choice) {
                 setScore(prev => prev + 1);
-                addXp(XP_VALUES.QUIZ_CORRECT);
+                addXp(XP_VALUES.QUIZ_CORRECT).catch(console.error);
                 setXpEarned(prev => prev + XP_VALUES.QUIZ_CORRECT);
               }
               setAnswered(true);
@@ -121,40 +103,29 @@ export default function QuizMode({ onBack }) {
     );
   }
 
-  // Show answer feedback
   const isCorrect = selectedAnswer === q.correct_choice;
-
   return (
     <Box flexDirection="column" paddingX={1}>
       <Box borderStyle="single" borderColor="magenta" paddingX={1} justifyContent="space-between">
         <Text bold color="magenta">Quiz</Text>
         <Text color="gray">Q{currentIndex + 1}/{questions.length} | Score: {score}</Text>
       </Box>
-
+      <Box marginTop={1}><Text bold>{q.front}</Text></Box>
       <Box marginTop={1}>
-        <Text bold>{q.front}</Text>
+        {isCorrect
+          ? <Text color="green" bold>Correct! +{XP_VALUES.QUIZ_CORRECT} XP</Text>
+          : <Box flexDirection="column">
+              <Text color="red" bold>Incorrect</Text>
+              <Text color="green">Correct answer: {choices[q.correct_choice]}</Text>
+            </Box>
+        }
       </Box>
-
-      <Box marginTop={1}>
-        {isCorrect ? (
-          <Text color="green" bold>Correct! +{XP_VALUES.QUIZ_CORRECT} XP</Text>
-        ) : (
-          <Box flexDirection="column">
-            <Text color="red" bold>Incorrect</Text>
-            <Text color="green">Correct answer: {choices[q.correct_choice]}</Text>
-          </Box>
-        )}
-      </Box>
-
       {q.back && (
         <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
           <Text color="gray">{q.back}</Text>
         </Box>
       )}
-
-      <Box marginTop={1}>
-        <Text color="gray">Press Enter to continue</Text>
-      </Box>
+      <Box marginTop={1}><Text color="gray">Press Enter to continue</Text></Box>
     </Box>
   );
 }

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
-import Header from '../components/header.js';
 import { getDueCards, processReview } from '../engine/scheduler.js';
 import { updateStreak, incrementSessionCount } from '../db/queries.js';
 
@@ -14,47 +13,37 @@ export default function StudySession({ onBack }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const due = getDueCards(30);
-    setCards(due);
-    setLoaded(true);
-    if (due.length > 0) {
-      updateStreak();
-    }
+    const load = async () => {
+      const due = await getDueCards(30);
+      setCards(due);
+      setLoaded(true);
+      if (due.length > 0) {
+        updateStreak().catch(console.error);
+      }
+    };
+    load();
   }, []);
 
   useInput((input, key) => {
-    if (key.escape) {
-      onBack();
-      return;
-    }
-
-    if (done) {
-      if (key.return) onBack();
-      return;
-    }
-
-    if (cards.length === 0) {
-      if (key.return) onBack();
-      return;
-    }
+    if (key.escape) { onBack(); return; }
+    if (done) { if (key.return) onBack(); return; }
+    if (cards.length === 0) { if (key.return) onBack(); return; }
 
     if (!showAnswer) {
-      if (key.return || input === ' ') {
-        setShowAnswer(true);
-      }
+      if (key.return || input === ' ') setShowAnswer(true);
       return;
     }
 
-    // Rating: 1-5
     const rating = parseInt(input);
     if (rating >= 1 && rating <= 5) {
       const card = cards[currentIndex];
-      const { xpEarned } = processReview(card.id, rating);
-      setSessionXp(prev => prev + xpEarned);
+      processReview(card.id, rating).then(({ xpEarned }) => {
+        setSessionXp(prev => prev + xpEarned);
+      }).catch(console.error);
       if (rating >= 3) setSessionCorrect(prev => prev + 1);
 
       if (currentIndex + 1 >= cards.length) {
-        incrementSessionCount();
+        incrementSessionCount().catch(console.error);
         setDone(true);
       } else {
         setCurrentIndex(prev => prev + 1);
@@ -64,11 +53,7 @@ export default function StudySession({ onBack }) {
   });
 
   if (!loaded) {
-    return (
-      <Box paddingX={1}>
-        <Text>Loading cards...</Text>
-      </Box>
-    );
+    return <Box paddingX={1}><Text>Loading cards...</Text></Box>;
   }
 
   if (cards.length === 0) {
@@ -78,9 +63,7 @@ export default function StudySession({ onBack }) {
           <Text bold color="green">No cards due!</Text>
         </Box>
         <Text>You're all caught up. Come back later for more reviews.</Text>
-        <Box marginTop={1}>
-          <Text color="gray">Press Enter to go back</Text>
-        </Box>
+        <Box marginTop={1}><Text color="gray">Press Enter to go back</Text></Box>
       </Box>
     );
   }
@@ -95,9 +78,7 @@ export default function StudySession({ onBack }) {
         <Text>Cards reviewed: <Text bold>{cards.length}</Text></Text>
         <Text>Correct: <Text bold color="green">{sessionCorrect}/{cards.length}</Text> ({accuracy}%)</Text>
         <Text>XP earned: <Text bold color="yellow">+{sessionXp}</Text></Text>
-        <Box marginTop={1}>
-          <Text color="gray">Press Enter to continue</Text>
-        </Box>
+        <Box marginTop={1}><Text color="gray">Press Enter to continue</Text></Box>
       </Box>
     );
   }
@@ -117,9 +98,7 @@ export default function StudySession({ onBack }) {
       </Box>
 
       {!showAnswer && (
-        <Box marginTop={1}>
-          <Text color="gray">Press Space or Enter to reveal answer</Text>
-        </Box>
+        <Box marginTop={1}><Text color="gray">Press Space or Enter to reveal answer</Text></Box>
       )}
 
       {showAnswer && (
@@ -127,7 +106,6 @@ export default function StudySession({ onBack }) {
           <Box borderStyle="single" borderColor="green" paddingX={1}>
             <Text color="green">{card.back}</Text>
           </Box>
-
           <Box marginTop={1} flexDirection="column">
             <Text bold>How well did you know this?</Text>
             <Box marginTop={0}>
