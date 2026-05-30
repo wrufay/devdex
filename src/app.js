@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from 'ink';
 import MainMenu from './screens/main-menu.js';
-import ImportPdf from './screens/import-pdf.js';
 import StudySession from './screens/study-session.js';
 import QuizMode from './screens/quiz-mode.js';
 import Dashboard from './screens/dashboard.js';
@@ -26,8 +25,6 @@ export default function App() {
   switch (screen) {
     case 'menu':
       return <MainMenu onNavigate={navigate} />;
-    case 'import':
-      return <ImportPdf onBack={goBack} />;
     case 'create':
       return <CreateCard onNavigate={navigate} />;
     case 'study':

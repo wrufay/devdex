@@ -12,7 +12,6 @@ export default function MainMenu({ onNavigate }) {
     { label: `Study${dueCount > 0 ? ` (${dueCount} cards due)` : ''}`, value: 'study' },
     { label: `Quiz Mode${mcqCount > 0 ? ` (${mcqCount} questions)` : ''}`, value: 'quiz' },
     { label: 'Cram Mode', value: 'cram' },
-    { label: 'Import PDF', value: 'import' },
     { label: 'Create Flashcard', value: 'create' },
     { label: 'Browse Decks', value: 'decks' },
     { label: 'Dashboard & Stats', value: 'dashboard' },

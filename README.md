@@ -1,38 +1,70 @@
-# CLI Anki for Any Subject
+# CLI Flashcard Study App
 
-## Setup instructions
+A terminal-based flashcard app with spaced repetition, quiz mode, cram mode, and XP/streak tracking.
+
+## Setup
 
 1. Clone this repo
 ```bash
 git clone https://github.com/<your-username-here>/cli_136.git
-```
-
-2. Make `.env` file following `.env.example`:
-```
-ANTHROPIC_API_KEY=your-key-here
-```
-(Get your api key from https://console.anthropic.com)
-
-3. Navigate to the cli_136 repository
-```bash
 cd cli_136
 ```
 
-4. Install dependencies
+2. Install dependencies
 ```bash
 npm install
 ```
 
-5. Start the application
+3. Start the application
 ```bash
 npm start
 ```
 
 ### ENJOY ! 🩶
 
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Runtime | Node.js (ESM) |
+| UI | React + [Ink](https://github.com/vadimdemedes/ink) |
+| Database | SQLite via `better-sqlite3` |
+| Build | esbuild |
+
+## Architecture
+
+```
+src/
+├── index.js          # Entry point — init DB, render app
+├── app.js            # Root component, screen router
+├── screens/          # One component per screen (study, quiz, cram, etc.)
+├── engine/
+│   ├── sm2.js        # SM-2 spaced repetition algorithm
+│   ├── scheduler.js  # Card scheduling logic
+│   └── xp.js         # XP calculation
+├── db/
+│   ├── schema.js     # Table definitions (decks, cards, review_logs, user_progress)
+│   ├── queries.js    # All SQL queries
+│   └── connection.js # SQLite connection singleton
+└── components/       # Shared UI components (header, etc.)
+```
+
+**Data flow:** screens call engine functions → engine reads/writes via db/queries → SQLite persists to `data/study.db`
+
+## Features
+
+- Spaced repetition (SM-2 algorithm)
+- Quiz mode (multiple choice)
+- Cram mode
+- XP and streak tracking
+- Dashboard & stats
+- Manual flashcard creation
+
 ## TODO / Roadmap
 
-- [ ] Custom AI instructions when importing PDFs (e.g., "focus on definitions", "include more code examples")
+- [ ] Levels and progression based on XP
+- [ ] Achievements and badges (streaks, milestones)
+- [ ] Daily challenges with bonus XP
 - [ ] Edit existing flashcards
-- [ ] Add personal notes to flashcards (mnemonic devices, additional context)
-- [ ] Type-in answer mode (practice articulating answers before revealing)
+- [ ] Add personal notes to flashcards
+- [ ] Type-in answer mode
