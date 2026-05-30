@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Text } from 'ink';
+import blessed from 'neo-blessed';
 import { createServer } from 'http';
 import { exec } from 'child_process';
 import { supabase } from '../db/connection.js';
@@ -11,44 +10,29 @@ function openBrowser(url) {
   exec(cmd);
 }
 
-async function startCallbackServer() {
+function startCallbackServer() {
   return new Promise((resolve, reject) => {
     const server = createServer((req, res) => {
       const url = new URL(req.url, `http://localhost:${CALLBACK_PORT}`);
       const code = url.searchParams.get('code');
 
-      // If no code in query params, serve a page that extracts it from the hash fragment
       if (!code) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(`
-          <html>
-            <body style="font-family:monospace;background:#000;color:#0f0;padding:40px">
-              <h2>Completing auth...</h2>
-              <script>
-                const params = new URLSearchParams(window.location.hash.slice(1));
-                const code = params.get('code') || new URLSearchParams(window.location.search).get('code');
-                if (code) {
-                  fetch('/?code=' + code).then(() => {
-                    document.body.innerHTML = '<h2>Auth successful!</h2><p>You can close this tab.</p>';
-                  });
-                }
-              </script>
-            </body>
-          </html>
-        `);
+        res.end(`<html><body style="font-family:monospace;background:#000;color:#0f0;padding:40px">
+          <h2>Completing auth...</h2>
+          <script>
+            const code = new URLSearchParams(window.location.search).get('code')
+              || new URLSearchParams(window.location.hash.slice(1)).get('code');
+            if (code) fetch('/?code=' + code).then(() => {
+              document.body.innerHTML = '<h2>Done! Return to terminal.</h2>';
+            });
+          </script></body></html>`);
         return;
       }
 
       res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(`
-        <html>
-          <body style="font-family:monospace;background:#000;color:#0f0;padding:40px">
-            <h2>Auth successful!</h2>
-            <p>You can close this tab and return to the terminal.</p>
-          </body>
-        </html>
-      `);
-
+      res.end(`<html><body style="font-family:monospace;background:#000;color:#0f0;padding:40px">
+        <h2>Auth successful!</h2><p>You can close this tab.</p></body></html>`);
       server.close();
       resolve(code);
     });
@@ -58,87 +42,45 @@ async function startCallbackServer() {
   });
 }
 
-export default function Auth({ onAuth }) {
-  const [status, setStatus] = useState('idle'); // idle | waiting | error
-  const [error, setError] = useState('');
+export async function renderAuth(screen, navigate) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) { navigate('menu'); return; }
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) onAuth();
+  const box = blessed.box({
+    top: 'center', left: 'center', width: '60%', height: 10,
+    border: { type: 'double' },
+    style: { border: { fg: 'blue' } },
+    tags: true,
+    content: '{cyan-fg}{bold}Study Terminal{/bold}{/cyan-fg}\n\n{white-fg}Opening GitHub in your browser...{/white-fg}\n\n{gray-fg}Waiting for authorization. Complete it in your browser.{/gray-fg}',
+  });
+
+  screen.append(box);
+  screen.render();
+
+  try {
+    const codePromise = startCallbackServer();
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: `http://localhost:${CALLBACK_PORT}`,
+        skipBrowserRedirect: true,
+      },
     });
-  }, []);
 
-  const handleLogin = async () => {
-    setStatus('waiting');
-    setError('');
+    if (error) throw error;
+    openBrowser(data.url);
 
-    try {
-      const codePromise = startCallbackServer();
+    const code = await codePromise;
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    if (exchangeError) throw exchangeError;
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `http://localhost:${CALLBACK_PORT}`,
-          skipBrowserRedirect: true,
-        },
-      });
-
-      if (error) throw error;
-
-      openBrowser(data.url);
-
-      const code = await codePromise;
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-      if (exchangeError) throw exchangeError;
-
-      onAuth();
-    } catch (err) {
-      setError(err.message);
-      setStatus('error');
-    }
-  };
-
-  useEffect(() => {
-    if (status === 'idle') handleLogin();
-  }, []);
-
-  if (status === 'waiting') {
-    return (
-      <Box flexDirection="column" paddingX={2} marginTop={2}>
-        <Box borderStyle="double" borderColor="blue" paddingX={2} marginBottom={2}>
-          <Text bold color="cyan">Study Terminal</Text>
-        </Box>
-        <Text bold color="white">Opening GitHub in your browser...</Text>
-        <Box marginTop={1}>
-          <Text color="gray">Waiting for authorization. Complete it in your browser to continue.</Text>
-        </Box>
-        <Box marginTop={1}>
-          <Text color="gray" dimColor>The browser should open automatically.</Text>
-        </Box>
-      </Box>
+    navigate('menu');
+  } catch (err) {
+    box.setContent(
+      `{red-fg}{bold}Auth Failed{/bold}{/red-fg}\n\n{red-fg}${err.message}{/red-fg}\n\n{gray-fg}Press any key to retry.{/gray-fg}`
     );
+    screen.render();
+    screen.once('keypress', () => navigate('auth'));
   }
-
-  if (status === 'error') {
-    return (
-      <Box flexDirection="column" paddingX={2} marginTop={2}>
-        <Box borderStyle="double" borderColor="red" paddingX={2} marginBottom={2}>
-          <Text bold color="red">Auth Failed</Text>
-        </Box>
-        <Text color="red">{error}</Text>
-        <Box marginTop={1}>
-          <Text color="gray">Restart the app to try again.</Text>
-        </Box>
-      </Box>
-    );
-  }
-
-  return (
-    <Box flexDirection="column" paddingX={2} marginTop={2}>
-      <Box borderStyle="double" borderColor="blue" paddingX={2} marginBottom={2}>
-        <Text bold color="cyan">Study Terminal</Text>
-      </Box>
-      <Text color="gray">Connecting...</Text>
-    </Box>
-  );
 }

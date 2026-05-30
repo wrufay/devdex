@@ -1,127 +1,104 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
+import blessed from 'neo-blessed';
+import { createHeader, HEADER_HEIGHT } from '../components/header.js';
 import { getDueCards, processReview } from '../engine/scheduler.js';
 import { updateStreak, incrementSessionCount } from '../db/queries.js';
 
-export default function StudySession({ onBack }) {
-  const [cards, setCards] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [sessionXp, setSessionXp] = useState(0);
-  const [sessionCorrect, setSessionCorrect] = useState(0);
-  const [done, setDone] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+export async function renderStudySession(screen, navigate) {
+  const header = createHeader(screen);
+  screen.append(header);
 
-  useEffect(() => {
-    const load = async () => {
-      const due = await getDueCards(30);
-      setCards(due);
-      setLoaded(true);
-      if (due.length > 0) {
-        updateStreak().catch(console.error);
-      }
-    };
-    load();
-  }, []);
+  const content = blessed.box({
+    top: HEADER_HEIGHT, left: 0, width: '100%', height: `100%-${HEADER_HEIGHT}`,
+    tags: true, padding: { left: 2, right: 2, top: 1 },
+  });
+  screen.append(content);
+  content.focus();
 
-  useInput((input, key) => {
-    if (key.escape) { onBack(); return; }
-    if (done) { if (key.return) onBack(); return; }
-    if (cards.length === 0) { if (key.return) onBack(); return; }
+  content.setContent('{gray-fg}Loading cards...{/gray-fg}');
+  screen.render();
 
-    if (!showAnswer) {
-      if (key.return || input === ' ') setShowAnswer(true);
+  const cards = await getDueCards(30);
+
+  if (cards.length > 0) updateStreak().catch(console.error);
+
+  let currentIndex = 0;
+  let showAnswer = false;
+  let sessionXp = 0;
+  let sessionCorrect = 0;
+
+  content.key(['escape'], () => navigate('menu'));
+
+  function render() {
+    if (cards.length === 0) {
+      content.setContent(
+        '{green-fg}{bold}No cards due!{/bold}{/green-fg}\n\n' +
+        'You\'re all caught up. Come back later.\n\n' +
+        '{gray-fg}Press ESC to go back{/gray-fg}'
+      );
+      screen.render();
       return;
     }
 
-    const rating = parseInt(input);
-    if (rating >= 1 && rating <= 5) {
-      const card = cards[currentIndex];
-      processReview(card.id, rating).then(({ xpEarned }) => {
-        setSessionXp(prev => prev + xpEarned);
-      }).catch(console.error);
-      if (rating >= 3) setSessionCorrect(prev => prev + 1);
+    if (currentIndex >= cards.length) {
+      const accuracy = Math.round((sessionCorrect / cards.length) * 100);
+      incrementSessionCount().catch(console.error);
+      content.setContent(
+        '{green-fg}{bold}Session Complete!{/bold}{/green-fg}\n\n' +
+        `Cards reviewed: {bold}${cards.length}{/bold}\n` +
+        `Correct: {green-fg}{bold}${sessionCorrect}/${cards.length}{/bold}{/green-fg} (${accuracy}%)\n` +
+        `XP earned: {yellow-fg}{bold}+${sessionXp}{/bold}{/yellow-fg}\n\n` +
+        '{gray-fg}Press Enter or ESC to continue{/gray-fg}'
+      );
+      content.removeAllListeners('keypress');
+      content.key(['enter', 'return', 'escape'], () => navigate('menu'));
+      screen.render();
+      return;
+    }
 
-      if (currentIndex + 1 >= cards.length) {
-        incrementSessionCount().catch(console.error);
-        setDone(true);
-      } else {
-        setCurrentIndex(prev => prev + 1);
-        setShowAnswer(false);
+    const card = cards[currentIndex];
+    const cardType = card.type === 'elaboration' ? 'Deep Think' : 'Flashcard';
+
+    if (!showAnswer) {
+      content.setContent(
+        `{blue-fg}${card.deck_name}{/blue-fg}  {gray-fg}[${currentIndex + 1}/${cards.length}] ${cardType}{/gray-fg}\n\n` +
+        `{white-fg}{bold}${card.front}{/bold}{/white-fg}\n\n` +
+        '{gray-fg}Press Space or Enter to reveal answer  |  ESC to quit{/gray-fg}\n' +
+        `{gray-fg}XP: +${sessionXp} this session{/gray-fg}`
+      );
+    } else {
+      content.setContent(
+        `{blue-fg}${card.deck_name}{/blue-fg}  {gray-fg}[${currentIndex + 1}/${cards.length}] ${cardType}{/gray-fg}\n\n` +
+        `{white-fg}{bold}${card.front}{/bold}{/white-fg}\n\n` +
+        `{green-fg}${card.back}{/green-fg}\n\n` +
+        '{bold}How well did you know this?{/bold}\n' +
+        '{red-fg}1:Again{/red-fg}  {yellow-fg}2:Hard{/yellow-fg}  {white-fg}3:Good{/white-fg}  {green-fg}4:Easy{/green-fg}  {cyan-fg}5:Perfect{/cyan-fg}\n\n' +
+        `{gray-fg}XP: +${sessionXp} this session{/gray-fg}`
+      );
+    }
+    screen.render();
+  }
+
+  content.on('keypress', async (ch) => {
+    if (currentIndex >= cards.length) return;
+
+    if (!showAnswer) {
+      if (ch === ' ' || ch === '\r' || ch === '\n') {
+        showAnswer = true;
+        render();
       }
+      return;
+    }
+
+    const rating = parseInt(ch);
+    if (rating >= 1 && rating <= 5) {
+      const { xpEarned } = await processReview(cards[currentIndex].id, rating).catch(() => ({ xpEarned: 0 }));
+      sessionXp += xpEarned;
+      if (rating >= 3) sessionCorrect++;
+      currentIndex++;
+      showAnswer = false;
+      render();
     }
   });
 
-  if (!loaded) {
-    return <Box paddingX={1}><Text>Loading cards...</Text></Box>;
-  }
-
-  if (cards.length === 0) {
-    return (
-      <Box flexDirection="column" paddingX={1}>
-        <Box borderStyle="single" borderColor="green" paddingX={1} marginBottom={1}>
-          <Text bold color="green">No cards due!</Text>
-        </Box>
-        <Text>You're all caught up. Come back later for more reviews.</Text>
-        <Box marginTop={1}><Text color="gray">Press Enter to go back</Text></Box>
-      </Box>
-    );
-  }
-
-  if (done) {
-    const accuracy = cards.length > 0 ? Math.round((sessionCorrect / cards.length) * 100) : 0;
-    return (
-      <Box flexDirection="column" paddingX={1}>
-        <Box borderStyle="double" borderColor="green" paddingX={1} marginBottom={1}>
-          <Text bold color="green">Session Complete!</Text>
-        </Box>
-        <Text>Cards reviewed: <Text bold>{cards.length}</Text></Text>
-        <Text>Correct: <Text bold color="green">{sessionCorrect}/{cards.length}</Text> ({accuracy}%)</Text>
-        <Text>XP earned: <Text bold color="yellow">+{sessionXp}</Text></Text>
-        <Box marginTop={1}><Text color="gray">Press Enter to continue</Text></Box>
-      </Box>
-    );
-  }
-
-  const card = cards[currentIndex];
-  const cardType = card.type === 'elaboration' ? 'Deep Think' : 'Flashcard';
-
-  return (
-    <Box flexDirection="column" paddingX={1}>
-      <Box borderStyle="single" borderColor="blue" paddingX={1} justifyContent="space-between">
-        <Text bold color="cyan">{card.deck_name}</Text>
-        <Text color="gray">[{currentIndex + 1}/{cards.length}] {cardType}</Text>
-      </Box>
-
-      <Box marginTop={1} flexDirection="column">
-        <Text bold color="white">{card.front}</Text>
-      </Box>
-
-      {!showAnswer && (
-        <Box marginTop={1}><Text color="gray">Press Space or Enter to reveal answer</Text></Box>
-      )}
-
-      {showAnswer && (
-        <Box marginTop={1} flexDirection="column">
-          <Box borderStyle="single" borderColor="green" paddingX={1}>
-            <Text color="green">{card.back}</Text>
-          </Box>
-          <Box marginTop={1} flexDirection="column">
-            <Text bold>How well did you know this?</Text>
-            <Box marginTop={0}>
-              <Text color="red">1:Again </Text>
-              <Text color="yellow">2:Hard </Text>
-              <Text color="white">3:Good </Text>
-              <Text color="green">4:Easy </Text>
-              <Text color="cyan">5:Perfect</Text>
-            </Box>
-          </Box>
-        </Box>
-      )}
-
-      <Box marginTop={1}>
-        <Text color="gray" dimColor>XP: +{sessionXp} this session | ESC to quit</Text>
-      </Box>
-    </Box>
-  );
+  render();
 }

@@ -1,197 +1,214 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
-import SelectInput from 'ink-select-input';
-import Header from '../components/header.js';
+import blessed from 'neo-blessed';
+import { createHeader, HEADER_HEIGHT } from '../components/header.js';
 import { getAllDecks, getCardsByDeck } from '../db/queries.js';
 
-export default function CramMode({ onBack }) {
-  const [step, setStep] = useState('deck-select');
-  const [decks, setDecks] = useState([]);
-  const [loaded, setLoaded] = useState(false);
-  const [selectedDeck, setSelectedDeck] = useState(null);
-  const [cards, setCards] = useState([]);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [incorrectCards, setIncorrectCards] = useState([]);
-  const [round, setRound] = useState(1);
-  const [firstTryCorrect, setFirstTryCorrect] = useState(0);
-  const [originalCardCount, setOriginalCardCount] = useState(0);
+export async function renderCramMode(screen, navigate) {
+  async function showDeckSelect() {
+    screen.children.slice().forEach(c => c.destroy());
 
-  useEffect(() => {
-    getAllDecks().then(d => { setDecks(d); setLoaded(true); });
-  }, []);
+    const header = createHeader(screen);
+    screen.append(header);
 
-  useInput((_input, key) => {
-    if (key.escape) { onBack(); return; }
-    if (step === 'cramming' && !showAnswer && key.return) setShowAnswer(true);
-  });
+    const decks = await getAllDecks();
 
-  if (!loaded) return <Box paddingX={1}><Text>Loading...</Text></Box>;
-
-  if (step === 'deck-select') {
     if (decks.length === 0) {
-      return (
-        <Box flexDirection="column">
-          <Header />
-          <Box marginTop={1} paddingX={1}>
-            <Text color="red">No decks found. Create some cards first.</Text>
-          </Box>
-          <Box marginTop={2} paddingX={1}>
-            <SelectInput items={[{ label: '← Back to Menu', value: 'back' }]} onSelect={() => onBack()} />
-          </Box>
-        </Box>
-      );
+      const box = blessed.box({
+        top: HEADER_HEIGHT, left: 0, width: '100%', height: `100%-${HEADER_HEIGHT}`,
+        tags: true, padding: { left: 2, top: 1 },
+        content: '{red-fg}No decks found. Create some cards first.{/red-fg}\n\n{gray-fg}Press ESC to go back{/gray-fg}',
+      });
+      box.key(['escape'], () => navigate('menu'));
+      box.focus();
+      screen.append(box);
+      screen.render();
+      return;
     }
 
-    return (
-      <Box flexDirection="column">
-        <Header />
-        <Box marginTop={1} marginBottom={1} paddingX={1}>
-          <Text bold color="magenta">Cram Mode - Select a Deck</Text>
-        </Box>
-        <Box marginBottom={1} paddingX={1}>
-          <Text color="gray">Study all cards until you know them all!</Text>
-        </Box>
-        <Box paddingX={1}>
-          <SelectInput
-            items={[
-              ...decks.map(d => ({ label: `${d.name} (${d.card_count} cards)`, value: d.id })),
-              { label: '← Back to Menu', value: 'back' },
-            ]}
-            onSelect={async (item) => {
-              if (item.value === 'back') { onBack(); return; }
-              const deck = decks.find(d => d.id === item.value);
-              const allCards = (await getCardsByDeck(item.value)).filter(c => c.type !== 'mcq');
-              if (allCards.length === 0) { onBack(); return; }
-              const shuffled = [...allCards].sort(() => Math.random() - 0.5);
-              setSelectedDeck(deck);
-              setCards(shuffled);
-              setOriginalCardCount(shuffled.length);
-              setStep('cramming');
-            }}
-          />
-        </Box>
-      </Box>
-    );
+    const label = blessed.text({
+      top: HEADER_HEIGHT + 1, left: 2, tags: true,
+      content: '{magenta-fg}{bold}Cram Mode{/bold}{/magenta-fg}  {gray-fg}Study all cards until you know them all!{/gray-fg}',
+    });
+    screen.append(label);
+
+    const list = blessed.list({
+      top: HEADER_HEIGHT + 3, left: 2, width: '60%',
+      height: `100%-${HEADER_HEIGHT + 4}`,
+      items: [...decks.map(d => `${d.name}  (${d.card_count} cards)`), '<- Back to Menu'],
+      keys: true, vi: true, mouse: true,
+      style: {
+        selected: { bg: 'blue', fg: 'white', bold: true },
+        item: { fg: 'white' },
+      },
+    });
+    screen.append(list);
+    list.focus();
+    screen.render();
+
+    list.key(['escape'], () => navigate('menu'));
+    list.on('select', async (_, index) => {
+      if (index === decks.length) { navigate('menu'); return; }
+      const deck = decks[index];
+      const allCards = (await getCardsByDeck(deck.id)).filter(c => c.type !== 'mcq');
+      if (allCards.length === 0) { navigate('menu'); return; }
+      const shuffled = [...allCards].sort(() => Math.random() - 0.5);
+      startCram(deck, shuffled);
+    });
   }
 
-  if (step === 'cramming') {
-    if (currentCardIndex >= cards.length) {
-      if (incorrectCards.length === 0) {
-        setStep('complete');
-        return null;
+  function startCram(deck, initialCards) {
+    let cards = initialCards;
+    let currentIndex = 0;
+    let incorrectCards = [];
+    let round = 1;
+    let firstTryCorrect = 0;
+    const originalCount = initialCards.length;
+
+    function showCard() {
+      screen.children.slice().forEach(c => c.destroy());
+
+      if (currentIndex >= cards.length) {
+        if (incorrectCards.length === 0) {
+          showComplete();
+          return;
+        }
+        cards = [...incorrectCards].sort(() => Math.random() - 0.5);
+        incorrectCards = [];
+        currentIndex = 0;
+        round++;
+        showCard();
+        return;
       }
-      const shuffled = [...incorrectCards].sort(() => Math.random() - 0.5);
-      setCards(shuffled);
-      setIncorrectCards([]);
-      setCurrentCardIndex(0);
-      setShowAnswer(false);
-      setRound(round + 1);
-      return null;
+
+      const header = createHeader(screen);
+      screen.append(header);
+
+      const card = cards[currentIndex];
+
+      const info = blessed.text({
+        top: HEADER_HEIGHT + 1, left: 2, tags: true,
+        content:
+          `{magenta-fg}{bold}Cram Mode{/bold}{/magenta-fg} {gray-fg}- ${deck.name}{/gray-fg}\n` +
+          `{gray-fg}Round ${round} • Card ${currentIndex + 1}/${cards.length}${incorrectCards.length > 0 ? ` • ${incorrectCards.length} to review` : ''}{/gray-fg}`,
+      });
+      screen.append(info);
+
+      const front = blessed.box({
+        top: HEADER_HEIGHT + 4, left: 2, width: '100%-4', height: 5,
+        border: { type: 'line' },
+        style: { border: { fg: 'cyan' } },
+        tags: true, padding: { left: 1 },
+        content: card.front,
+      });
+      screen.append(front);
+
+      const hint = blessed.text({
+        top: HEADER_HEIGHT + 10, left: 2, tags: true,
+        content: '{gray-fg}Press Enter to reveal answer  |  ESC to quit{/gray-fg}',
+      });
+      screen.append(hint);
+      front.focus();
+      screen.render();
+
+      front.key(['escape'], () => navigate('menu'));
+      front.once('keypress', (_ch, key) => {
+        if (key.name === 'enter' || key.name === 'return') showAnswer(card);
+      });
     }
 
-    const card = cards[currentCardIndex];
+    function showAnswer(card) {
+      screen.children.slice().forEach(c => c.destroy());
 
-    if (!showAnswer) {
-      return (
-        <Box flexDirection="column">
-          <Header />
-          <Box marginTop={1} paddingX={1}>
-            <Text><Text color="magenta" bold>Cram Mode</Text><Text color="gray"> - {selectedDeck.name}</Text></Text>
-          </Box>
-          <Box paddingX={1}>
-            <Text color="gray">
-              Round {round} • Card {currentCardIndex + 1}/{cards.length}
-              {incorrectCards.length > 0 && <Text> • {incorrectCards.length} to review</Text>}
-            </Text>
-          </Box>
-          <Box marginTop={2} paddingX={2} borderStyle="round" borderColor="cyan">
-            <Text wrap="wrap">{card.front}</Text>
-          </Box>
-          <Box marginTop={2} paddingX={1}>
-            <Text color="gray" dimColor>(Press Enter to reveal answer)</Text>
-          </Box>
-        </Box>
-      );
+      const header = createHeader(screen);
+      screen.append(header);
+
+      const info = blessed.text({
+        top: HEADER_HEIGHT + 1, left: 2, tags: true,
+        content:
+          `{magenta-fg}{bold}Cram Mode{/bold}{/magenta-fg} {gray-fg}- ${deck.name}{/gray-fg}\n` +
+          `{gray-fg}Round ${round} • Card ${currentIndex + 1}/${cards.length}{/gray-fg}`,
+      });
+      screen.append(info);
+
+      const front = blessed.box({
+        top: HEADER_HEIGHT + 4, left: 2, width: '100%-4', height: 4,
+        border: { type: 'line' }, style: { border: { fg: 'cyan' } },
+        tags: true, padding: { left: 1 }, content: `{cyan-fg}${card.front}{/cyan-fg}`,
+      });
+      screen.append(front);
+
+      const back = blessed.box({
+        top: HEADER_HEIGHT + 9, left: 2, width: '100%-4', height: 4,
+        border: { type: 'line' }, style: { border: { fg: 'green' } },
+        tags: true, padding: { left: 1 }, content: `{green-fg}${card.back}{/green-fg}`,
+      });
+      screen.append(back);
+
+      const actions = blessed.list({
+        top: HEADER_HEIGHT + 14, left: 2, width: '40%', height: 4,
+        items: ['[Y] I know this', '[N] Review again'],
+        keys: true, vi: true, mouse: true,
+        style: {
+          selected: { bg: 'blue', fg: 'white', bold: true },
+          item: { fg: 'white' },
+        },
+      });
+      screen.append(actions);
+      actions.focus();
+      screen.render();
+
+      actions.key(['escape'], () => navigate('menu'));
+      actions.once('select', (_, index) => {
+        if (index === 0) {
+          if (round === 1) firstTryCorrect++;
+        } else {
+          incorrectCards.push(card);
+        }
+        currentIndex++;
+        showCard();
+      });
     }
 
-    return (
-      <Box flexDirection="column">
-        <Header />
-        <Box marginTop={1} paddingX={1}>
-          <Text><Text color="magenta" bold>Cram Mode</Text><Text color="gray"> - {selectedDeck.name}</Text></Text>
-        </Box>
-        <Box paddingX={1}>
-          <Text color="gray">
-            Round {round} • Card {currentCardIndex + 1}/{cards.length}
-            {incorrectCards.length > 0 && <Text> • {incorrectCards.length + 1} to review</Text>}
-          </Text>
-        </Box>
-        <Box marginTop={1} paddingX={2} borderStyle="round" borderColor="cyan">
-          <Text wrap="wrap" color="cyan">{card.front}</Text>
-        </Box>
-        <Box marginTop={1} paddingX={2} borderStyle="round" borderColor="green">
-          <Text wrap="wrap" color="green">{card.back}</Text>
-        </Box>
-        <Box marginTop={2} paddingX={1}>
-          <SelectInput
-            items={[
-              { label: '✓ I know this', value: 'correct' },
-              { label: '✗ Review again', value: 'incorrect' },
-            ]}
-            onSelect={(item) => {
-              if (item.value === 'correct') {
-                if (round === 1) setFirstTryCorrect(prev => prev + 1);
-              } else {
-                setIncorrectCards(prev => [...prev, card]);
-              }
-              setCurrentCardIndex(prev => prev + 1);
-              setShowAnswer(false);
-            }}
-          />
-        </Box>
-      </Box>
-    );
+    function showComplete() {
+      screen.children.slice().forEach(c => c.destroy());
+
+      const header = createHeader(screen);
+      screen.append(header);
+
+      const accuracy = originalCount > 0 ? Math.round((firstTryCorrect / originalCount) * 100) : 0;
+
+      const info = blessed.box({
+        top: HEADER_HEIGHT, left: 0, width: '100%', height: `100%-${HEADER_HEIGHT}`,
+        tags: true, padding: { left: 2, top: 1 },
+        content:
+          '{green-fg}{bold}Cram Session Complete!{/bold}{/green-fg}\n\n' +
+          `{cyan-fg}Deck: ${deck.name}{/cyan-fg}\n` +
+          `Total cards: {bold}${originalCount}{/bold}\n` +
+          `Rounds needed: {bold}${round}{/bold}\n` +
+          `First-try accuracy: {bold}${accuracy}%{/bold}\n`,
+      });
+      screen.append(info);
+
+      const actions = blessed.list({
+        top: HEADER_HEIGHT + 8, left: 2, width: '40%', height: 4,
+        items: ['Cram Another Deck', 'Back to Menu'],
+        keys: true, vi: true, mouse: true,
+        style: {
+          selected: { bg: 'blue', fg: 'white', bold: true },
+          item: { fg: 'white' },
+        },
+      });
+      screen.append(actions);
+      actions.focus();
+      screen.render();
+
+      actions.on('select', (_, index) => {
+        if (index === 0) showDeckSelect();
+        else navigate('menu');
+      });
+    }
+
+    showCard();
   }
 
-  if (step === 'complete') {
-    const accuracy = originalCardCount > 0 ? Math.round((firstTryCorrect / originalCardCount) * 100) : 0;
-    return (
-      <Box flexDirection="column">
-        <Header />
-        <Box marginTop={1} marginBottom={1} paddingX={1}>
-          <Text bold color="green">Cram Session Complete!</Text>
-        </Box>
-        <Box marginBottom={1} paddingX={1}><Text color="cyan">Deck: {selectedDeck.name}</Text></Box>
-        <Box marginBottom={1} paddingX={1}><Text>Total cards: {originalCardCount}</Text></Box>
-        <Box marginBottom={1} paddingX={1}><Text>Rounds needed: {round}</Text></Box>
-        <Box marginBottom={1} paddingX={1}><Text>First-try accuracy: {accuracy}%</Text></Box>
-        <Box marginTop={2} paddingX={1}>
-          <SelectInput
-            items={[
-              { label: 'Cram Another Deck', value: 'again' },
-              { label: 'Back to Menu', value: 'menu' },
-            ]}
-            onSelect={(item) => {
-              if (item.value === 'again') {
-                setStep('deck-select');
-                setCards([]);
-                setCurrentCardIndex(0);
-                setShowAnswer(false);
-                setIncorrectCards([]);
-                setRound(1);
-                setFirstTryCorrect(0);
-                setOriginalCardCount(0);
-                setSelectedDeck(null);
-              } else {
-                onBack();
-              }
-            }}
-          />
-        </Box>
-      </Box>
-    );
-  }
-
-  return null;
+  showDeckSelect();
 }

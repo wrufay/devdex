@@ -1,39 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Text } from 'ink';
-import SelectInput from 'ink-select-input';
-import Header from '../components/header.js';
+import blessed from 'neo-blessed';
+import { createHeader, HEADER_HEIGHT } from '../components/header.js';
 import { getDueCardCount, getMcqCards } from '../db/queries.js';
 
-export default function MainMenu({ onNavigate }) {
-  const [dueCount, setDueCount] = useState(0);
-  const [mcqCount, setMcqCount] = useState(0);
+export async function renderMainMenu(screen, navigate) {
+  const [dueCount, mcqs] = await Promise.all([getDueCardCount(), getMcqCards(null, 999)]);
 
-  useEffect(() => {
-    Promise.all([getDueCardCount(), getMcqCards(null, 999)]).then(([due, mcqs]) => {
-      setDueCount(due);
-      setMcqCount(mcqs.length);
-    });
-  }, []);
+  const header = createHeader(screen);
+  screen.append(header);
+
+  const label = blessed.text({
+    top: HEADER_HEIGHT + 1, left: 2,
+    tags: true,
+    content: '{white-fg}{bold}What would you like to do?{/bold}{/white-fg}',
+  });
+  screen.append(label);
 
   const items = [
-    { label: `Study${dueCount > 0 ? ` (${dueCount} cards due)` : ''}`, value: 'study' },
-    { label: `Quiz Mode${mcqCount > 0 ? ` (${mcqCount} questions)` : ''}`, value: 'quiz' },
-    { label: 'Cram Mode', value: 'cram' },
-    { label: 'Create Flashcard', value: 'create' },
-    { label: 'Browse Decks', value: 'decks' },
-    { label: 'Dashboard & Stats', value: 'dashboard' },
-    { label: 'Quit', value: 'quit' },
+    dueCount > 0 ? `Study  (${dueCount} cards due)` : 'Study',
+    mcqs.length > 0 ? `Quiz Mode  (${mcqs.length} questions)` : 'Quiz Mode',
+    'Cram Mode',
+    'Create Flashcard',
+    'Browse Decks',
+    'Dashboard & Stats',
+    'Quit',
   ];
 
-  return (
-    <Box flexDirection="column">
-      <Header />
-      <Box marginTop={1} marginBottom={1} paddingX={1}>
-        <Text bold color="white">What would you like to do?</Text>
-      </Box>
-      <Box paddingX={1}>
-        <SelectInput items={items} onSelect={(item) => onNavigate(item.value)} />
-      </Box>
-    </Box>
-  );
+  const list = blessed.list({
+    top: HEADER_HEIGHT + 3, left: 2,
+    width: '50%',
+    height: `100%-${HEADER_HEIGHT + 4}`,
+    items,
+    keys: true,
+    vi: true,
+    mouse: true,
+    style: {
+      selected: { bg: 'blue', fg: 'white', bold: true },
+      item: { fg: 'white' },
+    },
+  });
+
+  screen.append(list);
+  list.focus();
+  screen.render();
+
+  const values = ['study', 'quiz', 'cram', 'create', 'decks', 'dashboard', 'quit'];
+  list.on('select', (_, index) => navigate(values[index]));
 }

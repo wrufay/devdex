@@ -1,79 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
+import blessed from 'neo-blessed';
+import { createHeader, HEADER_HEIGHT } from '../components/header.js';
 import {
   getUserProgress, getDueCardCount, getTotalCardCount,
   getMasteredCardCount, getUpcomingReviewCounts, getAllDecks,
 } from '../db/queries.js';
 import { calculateLevel, getLevelTitle } from '../engine/xp.js';
 
-export default function Dashboard({ onBack }) {
-  const [data, setData] = useState(null);
+export async function renderDashboard(screen, navigate) {
+  const header = createHeader(screen);
+  screen.append(header);
 
-  useInput((_input, key) => {
-    if (key.escape || key.return) onBack();
+  const content = blessed.box({
+    top: HEADER_HEIGHT, left: 0, width: '100%', height: `100%-${HEADER_HEIGHT}`,
+    tags: true, padding: { left: 2, right: 2, top: 1 },
   });
+  screen.append(content);
+  content.setContent('{gray-fg}Loading...{/gray-fg}');
+  content.focus();
+  screen.render();
 
-  useEffect(() => {
-    const load = async () => {
-      const [progress, dueCount, totalCards, mastered, upcoming, decks] = await Promise.all([
-        getUserProgress(),
-        getDueCardCount(),
-        getTotalCardCount(),
-        getMasteredCardCount(),
-        getUpcomingReviewCounts(),
-        getAllDecks(),
-      ]);
-      setData({ progress, dueCount, totalCards, mastered, upcoming, decks });
-    };
-    load();
-  }, []);
+  const [progress, dueCount, totalCards, mastered, upcoming, decks] = await Promise.all([
+    getUserProgress(), getDueCardCount(), getTotalCardCount(),
+    getMasteredCardCount(), getUpcomingReviewCounts(), getAllDecks(),
+  ]);
 
-  if (!data) return <Box paddingX={1}><Text>Loading...</Text></Box>;
-
-  const { progress, dueCount, totalCards, mastered, upcoming, decks } = data;
   const levelInfo = calculateLevel(progress.total_xp);
   const title = getLevelTitle(levelInfo.level);
   const barWidth = 25;
   const filled = Math.round((levelInfo.currentXp / levelInfo.xpToNext) * barWidth);
-  const bar = '█'.repeat(filled) + '░'.repeat(barWidth - filled);
+  const bar = '#'.repeat(filled) + '-'.repeat(barWidth - filled);
   const accuracy = totalCards > 0 ? Math.round((mastered / totalCards) * 100) : 0;
 
-  return (
-    <Box flexDirection="column" paddingX={1}>
-      <Box borderStyle="double" borderColor="blue" paddingX={1} marginBottom={1}>
-        <Text bold color="cyan">Dashboard & Stats</Text>
-      </Box>
-
-      <Box flexDirection="column" marginBottom={1}>
-        <Text><Text bold color="yellow">Level {levelInfo.level}</Text><Text color="gray"> - {title}</Text></Text>
-        <Text><Text color="green">{bar}</Text><Text color="gray"> {levelInfo.currentXp}/{levelInfo.xpToNext} XP</Text></Text>
-        <Text>
-          <Text color="red">Streak: {progress.current_streak} day{progress.current_streak !== 1 ? 's' : ''}</Text>
-          <Text color="gray">  (Best: {progress.longest_streak})</Text>
-        </Text>
-      </Box>
-
-      <Box borderStyle="single" borderColor="green" paddingX={1} flexDirection="column" marginBottom={1}>
-        <Text bold color="green">Today</Text>
-        <Text>Cards due: <Text bold>{dueCount}</Text></Text>
-        <Text>Total XP: <Text bold color="yellow">{progress.total_xp}</Text></Text>
-      </Box>
-
-      <Box borderStyle="single" borderColor="cyan" paddingX={1} flexDirection="column" marginBottom={1}>
-        <Text bold color="cyan">All Time</Text>
-        <Text>Total reviews: <Text bold>{progress.total_cards_reviewed}</Text></Text>
-        <Text>Sessions: <Text bold>{progress.total_sessions}</Text></Text>
-        <Text>Cards mastered: <Text bold color="green">{mastered}/{totalCards}</Text> {totalCards > 0 ? `(${accuracy}%)` : ''}</Text>
-        <Text>Decks: <Text bold>{decks.length}</Text></Text>
-      </Box>
-
-      <Box borderStyle="single" borderColor="yellow" paddingX={1} flexDirection="column" marginBottom={1}>
-        <Text bold color="yellow">Upcoming Reviews</Text>
-        <Text>Tomorrow: <Text bold>{upcoming.tomorrow}</Text> cards</Text>
-        <Text>This week: <Text bold>{upcoming.thisWeek}</Text> cards</Text>
-      </Box>
-
-      <Text color="gray">Press Enter or ESC to go back</Text>
-    </Box>
+  content.setContent(
+    '{cyan-fg}{bold}Dashboard & Stats{/bold}{/cyan-fg}\n\n' +
+    `{yellow-fg}{bold}Level ${levelInfo.level}{/bold}{/yellow-fg} {gray-fg}- ${title}{/gray-fg}\n` +
+    `{green-fg}${bar}{/green-fg} {gray-fg}${levelInfo.currentXp}/${levelInfo.xpToNext} XP{/gray-fg}\n` +
+    `{red-fg}Streak: ${progress.current_streak} day${progress.current_streak !== 1 ? 's' : ''}{/red-fg}  {gray-fg}(Best: ${progress.longest_streak}){/gray-fg}\n\n` +
+    '{green-fg}{bold}Today{/bold}{/green-fg}\n' +
+    `  Cards due: {bold}${dueCount}{/bold}\n` +
+    `  Total XP: {yellow-fg}{bold}${progress.total_xp}{/bold}{/yellow-fg}\n\n` +
+    '{cyan-fg}{bold}All Time{/bold}{/cyan-fg}\n' +
+    `  Reviews: {bold}${progress.total_cards_reviewed}{/bold}\n` +
+    `  Sessions: {bold}${progress.total_sessions}{/bold}\n` +
+    `  Mastered: {green-fg}{bold}${mastered}/${totalCards}{/bold}{/green-fg}${totalCards > 0 ? ` (${accuracy}%)` : ''}\n` +
+    `  Decks: {bold}${decks.length}{/bold}\n\n` +
+    '{yellow-fg}{bold}Upcoming Reviews{/bold}{/yellow-fg}\n' +
+    `  Tomorrow: {bold}${upcoming.tomorrow}{/bold} cards\n` +
+    `  This week: {bold}${upcoming.thisWeek}{/bold} cards\n\n` +
+    '{gray-fg}Press ESC to go back{/gray-fg}'
   );
+
+  content.key(['escape', 'return'], () => navigate('menu'));
+  screen.render();
 }

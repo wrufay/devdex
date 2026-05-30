@@ -1,8 +1,26 @@
 #!/usr/bin/env node
 import 'dotenv/config';
-import React from 'react';
-import { render } from 'ink';
-import App from './app.js';
+import blessed from 'neo-blessed';
+import { createNavigate } from './app.js';
 
-const { waitUntilExit } = render(React.createElement(App));
-waitUntilExit().then(() => process.exit(0));
+export const screen = blessed.screen({
+  smartCSR: true,
+  title: 'Study Terminal',
+  fullUnicode: false,
+});
+
+screen.key(['C-c'], () => {
+  screen.destroy();
+  process.exit(0);
+});
+
+screen.on('resize', () => screen.render());
+
+process.on('uncaughtException', (err) => {
+  try { screen.destroy(); } catch (_) {}
+  process.stderr.write(`\nuncaughtException: ${err.stack || err}\n`);
+  process.exit(1);
+});
+
+const navigate = createNavigate(screen);
+navigate('auth');

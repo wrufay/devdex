@@ -1,131 +1,114 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
-import SelectInput from 'ink-select-input';
+import blessed from 'neo-blessed';
+import { createHeader, HEADER_HEIGHT } from '../components/header.js';
 import { getMcqCards, addXp, updateStreak, incrementSessionCount } from '../db/queries.js';
 import { XP_VALUES } from '../engine/xp.js';
 
-export default function QuizMode({ onBack }) {
-  const [questions, setQuestions] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [xpEarned, setXpEarned] = useState(0);
-  const [answered, setAnswered] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [done, setDone] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+export async function renderQuizMode(screen, navigate) {
+  const header = createHeader(screen);
+  screen.append(header);
 
-  useEffect(() => {
-    const load = async () => {
-      const mcqs = await getMcqCards(null, 10);
-      setQuestions(mcqs);
-      setLoaded(true);
-      if (mcqs.length > 0) updateStreak().catch(console.error);
-    };
-    load();
-  }, []);
-
-  useInput((input, key) => {
-    if (key.escape) { onBack(); return; }
-    if (done && key.return) { onBack(); return; }
-    if (answered && key.return) {
-      if (currentIndex + 1 >= questions.length) {
-        incrementSessionCount().catch(console.error);
-        if (score + (selectedAnswer === questions[currentIndex].correct_choice ? 1 : 0) === questions.length) {
-          addXp(XP_VALUES.QUIZ_PERFECT_SCORE).catch(console.error);
-          setXpEarned(prev => prev + XP_VALUES.QUIZ_PERFECT_SCORE);
-        }
-        setDone(true);
-      } else {
-        setCurrentIndex(prev => prev + 1);
-        setAnswered(false);
-        setSelectedAnswer(null);
-      }
-    }
+  const content = blessed.box({
+    top: HEADER_HEIGHT, left: 0, width: '100%', height: `100%-${HEADER_HEIGHT}`,
+    tags: true, padding: { left: 2, right: 2, top: 1 },
   });
+  screen.append(content);
+  content.setContent('{gray-fg}Loading quiz...{/gray-fg}');
+  screen.render();
 
-  if (!loaded) return <Box paddingX={1}><Text>Loading quiz...</Text></Box>;
+  const questions = await getMcqCards(null, 10);
+  if (questions.length > 0) updateStreak().catch(console.error);
 
   if (questions.length === 0) {
-    return (
-      <Box flexDirection="column" paddingX={1}>
-        <Box borderStyle="single" borderColor="yellow" paddingX={1} marginBottom={1}>
-          <Text bold color="yellow">No Quiz Questions</Text>
-        </Box>
-        <Text>Create some MCQ cards first.</Text>
-        <Box marginTop={1}><Text color="gray">Press ESC to go back</Text></Box>
-      </Box>
+    content.setContent(
+      '{yellow-fg}{bold}No Quiz Questions{/bold}{/yellow-fg}\n\nCreate some MCQ cards first.\n\n{gray-fg}Press ESC to go back{/gray-fg}'
     );
+    content.key(['escape'], () => navigate('menu'));
+    content.focus();
+    screen.render();
+    return;
   }
 
-  if (done) {
-    const accuracy = Math.round((score / questions.length) * 100);
-    return (
-      <Box flexDirection="column" paddingX={1}>
-        <Box borderStyle="double" borderColor="green" paddingX={1} marginBottom={1}>
-          <Text bold color="green">Quiz Complete!</Text>
-        </Box>
-        <Text>Score: <Text bold color="green">{score}/{questions.length}</Text> ({accuracy}%)</Text>
-        <Text>XP earned: <Text bold color="yellow">+{xpEarned}</Text></Text>
-        {score === questions.length && (
-          <Text color="magenta" bold>Perfect score bonus! +{XP_VALUES.QUIZ_PERFECT_SCORE} XP</Text>
-        )}
-        <Box marginTop={1}><Text color="gray">Press Enter to continue</Text></Box>
-      </Box>
-    );
-  }
+  let currentIndex = 0;
+  let score = 0;
+  let xpEarned = 0;
 
-  const q = questions[currentIndex];
-  const choices = Array.isArray(q.choices) ? q.choices : JSON.parse(q.choices || '[]');
+  content.key(['escape'], () => navigate('menu'));
 
-  if (!answered) {
-    return (
-      <Box flexDirection="column" paddingX={1}>
-        <Box borderStyle="single" borderColor="magenta" paddingX={1} justifyContent="space-between">
-          <Text bold color="magenta">Quiz</Text>
-          <Text color="gray">Q{currentIndex + 1}/{questions.length} | Score: {score}</Text>
-        </Box>
-        <Box marginTop={1}><Text bold color="white">{q.front}</Text></Box>
-        <Box marginTop={1}>
-          <SelectInput
-            items={choices.map((choice, i) => ({ label: choice, value: i }))}
-            onSelect={(item) => {
-              setSelectedAnswer(item.value);
-              if (item.value === q.correct_choice) {
-                setScore(prev => prev + 1);
-                addXp(XP_VALUES.QUIZ_CORRECT).catch(console.error);
-                setXpEarned(prev => prev + XP_VALUES.QUIZ_CORRECT);
-              }
-              setAnswered(true);
-            }}
-          />
-        </Box>
-      </Box>
-    );
-  }
+  function renderQuestion() {
+    content.children.slice().forEach(c => c.destroy());
+    content.setContent('');
 
-  const isCorrect = selectedAnswer === q.correct_choice;
-  return (
-    <Box flexDirection="column" paddingX={1}>
-      <Box borderStyle="single" borderColor="magenta" paddingX={1} justifyContent="space-between">
-        <Text bold color="magenta">Quiz</Text>
-        <Text color="gray">Q{currentIndex + 1}/{questions.length} | Score: {score}</Text>
-      </Box>
-      <Box marginTop={1}><Text bold>{q.front}</Text></Box>
-      <Box marginTop={1}>
-        {isCorrect
-          ? <Text color="green" bold>Correct! +{XP_VALUES.QUIZ_CORRECT} XP</Text>
-          : <Box flexDirection="column">
-              <Text color="red" bold>Incorrect</Text>
-              <Text color="green">Correct answer: {choices[q.correct_choice]}</Text>
-            </Box>
+    if (currentIndex >= questions.length) {
+      incrementSessionCount().catch(console.error);
+      const accuracy = Math.round((score / questions.length) * 100);
+      content.setContent(
+        '{green-fg}{bold}Quiz Complete!{/bold}{/green-fg}\n\n' +
+        `Score: {green-fg}{bold}${score}/${questions.length}{/bold}{/green-fg} (${accuracy}%)\n` +
+        `XP earned: {yellow-fg}{bold}+${xpEarned}{/bold}{/yellow-fg}\n\n` +
+        '{gray-fg}Press ESC to go back{/gray-fg}'
+      );
+      screen.render();
+      return;
+    }
+
+    const q = questions[currentIndex];
+    const choices = Array.isArray(q.choices) ? q.choices : JSON.parse(q.choices || '[]');
+
+    const info = blessed.text({
+      top: 0, left: 0, tags: true,
+      content: `{magenta-fg}{bold}Quiz{/bold}{/magenta-fg}  {gray-fg}Q${currentIndex + 1}/${questions.length} | Score: ${score}{/gray-fg}`,
+    });
+    content.append(info);
+
+    const question = blessed.text({
+      top: 2, left: 0, width: '100%-4', tags: true,
+      content: `{white-fg}{bold}${q.front}{/bold}{/white-fg}`,
+    });
+    content.append(question);
+
+    const list = blessed.list({
+      top: 5, left: 0, width: '80%',
+      height: choices.length + 2,
+      items: choices,
+      keys: true, vi: true, mouse: true,
+      border: { type: 'line' },
+      style: {
+        border: { fg: 'gray' },
+        selected: { bg: 'blue', fg: 'white' },
+        item: { fg: 'white' },
+      },
+    });
+    content.append(list);
+    list.focus();
+    screen.render();
+
+    list.once('select', async (_, index) => {
+      const isCorrect = index === q.correct_choice;
+      if (isCorrect) {
+        score++;
+        await addXp(XP_VALUES.QUIZ_CORRECT).catch(console.error);
+        xpEarned += XP_VALUES.QUIZ_CORRECT;
+      }
+
+      list.destroy();
+      const feedback = blessed.text({
+        top: 5, left: 0, tags: true,
+        content: isCorrect
+          ? `{green-fg}{bold}Correct! +${XP_VALUES.QUIZ_CORRECT} XP{/bold}{/green-fg}\n\n{gray-fg}Press Enter to continue{/gray-fg}`
+          : `{red-fg}{bold}Incorrect{/bold}{/red-fg}\n{green-fg}Correct answer: ${choices[q.correct_choice]}{/green-fg}\n\n{gray-fg}Press Enter to continue{/gray-fg}`,
+      });
+      content.append(feedback);
+      content.focus();
+      screen.render();
+
+      content.once('keypress', (_ch, key) => {
+        if (key.name === 'return' || key.name === 'enter') {
+          currentIndex++;
+          renderQuestion();
         }
-      </Box>
-      {q.back && (
-        <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
-          <Text color="gray">{q.back}</Text>
-        </Box>
-      )}
-      <Box marginTop={1}><Text color="gray">Press Enter to continue</Text></Box>
-    </Box>
-  );
+      });
+    });
+  }
+
+  renderQuestion();
 }

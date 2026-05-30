@@ -7,9 +7,9 @@
     "study": "./src/index.js"
   },
   "scripts": {
-    "build": "esbuild src/index.js --bundle --platform=node --outfile=dist/app.mjs --format=esm --jsx=automatic --loader:.js=jsx --define:process.env.NODE_ENV=\\\"production\\\" --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\"",
-    "start": "npm run build && NODE_ENV=production node dist/app.mjs",
-    "dev": "npm run build && NODE_ENV=production node dist/app.mjs",
+    "build": "esbuild src/index.js --bundle --platform=node --outfile=dist/app.mjs --format=esm --external:blessed --external:term.js --external:pty.js --define:process.env.NODE_ENV=\\\"production\\\" --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\"",
+    "start": "NODE_ENV=production node src/index.js",
+    "dev": "node src/index.js",
     "test": "node --test src/**/*.test.js"
   },
   "keywords": [],
@@ -17,18 +17,13 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@inkjs/ui": "^2.0.0",
     "@supabase/supabase-js": "^2.106.2",
     "chalk": "^5.6.2",
     "dotenv": "^17.4.2",
-    "ink": "^6.6.0",
-    "ink-select-input": "^6.2.0",
-    "ink-spinner": "^5.0.0",
-    "ink-text-input": "^6.0.0",
-    "react": "^19.2.4",
-    "react-devtools-core": "^6.1.5"
+    "neo-blessed": "^0.2.0"
   },
   "devDependencies": {
+    "@types/blessed": "^0.1.27",
     "esbuild": "^0.27.2"
   }
 }
