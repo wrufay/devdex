@@ -1,6 +1,6 @@
 import blessed from 'neo-blessed';
 import { createHeader, HEADER_HEIGHT } from '../components/header.js';
-import { getAllDecks, deleteDeck, getCardsByDeck } from '../db/queries.js';
+import { getAllDecks, deleteDeck, getCardsByDeck, setDeckPublic } from '../db/queries.js';
 
 export async function renderDeckBrowser(screen, navigate) {
   async function showDeckList() {
@@ -61,11 +61,13 @@ export async function renderDeckBrowser(screen, navigate) {
     const mcqs = cards.filter(c => c.type === 'mcq').length;
     const elab = cards.filter(c => c.type === 'elaboration').length;
 
+    const visibilityLabel = deck.is_public ? '{green-fg}Public{/green-fg}' : '{gray-fg}Private{/gray-fg}';
+
     const info = blessed.box({
       top: HEADER_HEIGHT, left: 0, width: '60%', height: `100%-${HEADER_HEIGHT}`,
       tags: true, padding: { left: 2, top: 1 },
       content:
-        `{cyan-fg}{bold}${deck.name}{/bold}{/cyan-fg}\n\n` +
+        `{cyan-fg}{bold}${deck.name}{/bold}{/cyan-fg}  ${visibilityLabel}\n\n` +
         `Created: {gray-fg}${deck.created_at}{/gray-fg}\n\n` +
         `Total cards: {bold}${cards.length}{/bold}\n` +
         `  {cyan-fg}Flashcards: ${flashcards}{/cyan-fg}\n` +
@@ -75,10 +77,11 @@ export async function renderDeckBrowser(screen, navigate) {
     });
     screen.append(info);
 
+    const toggleLabel = deck.is_public ? 'Make Private' : 'Make Public';
     const actions = blessed.list({
       top: HEADER_HEIGHT + 3, left: '60%', width: '35%',
-      height: 6,
-      items: ['Delete Deck', 'Back'],
+      height: 7,
+      items: [toggleLabel, 'Delete Deck', 'Back'],
       keys: true, vi: true, mouse: true,
       border: { type: 'line' },
       style: {
@@ -92,9 +95,16 @@ export async function renderDeckBrowser(screen, navigate) {
     screen.render();
 
     actions.key(['escape'], () => showDeckList());
-    actions.on('select', (_, index) => {
-      if (index === 0) confirmDelete(deck);
-      else showDeckList();
+    actions.on('select', async (_, index) => {
+      if (index === 0) {
+        await setDeckPublic(deck.id, !deck.is_public).catch(console.error);
+        deck.is_public = !deck.is_public;
+        showDeckDetail(deck);
+      } else if (index === 1) {
+        confirmDelete(deck);
+      } else {
+        showDeckList();
+      }
     });
   }
 

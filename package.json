@@ -9,7 +9,7 @@
   "scripts": {
     "build": "esbuild src/index.js --bundle --platform=node --outfile=dist/app.mjs --format=esm --external:blessed --external:term.js --external:pty.js --define:process.env.NODE_ENV=\\\"production\\\" --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\"",
     "start": "NODE_ENV=production node src/index.js",
-    "dev": "node src/index.js",
+    "dev": "nodemon --watch src --ext js src/index.js",
     "test": "node --test src/**/*.test.js"
   },
   "keywords": [],
@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@types/blessed": "^0.1.27",
-    "esbuild": "^0.27.2"
+    "esbuild": "^0.27.2",
+    "nodemon": "^3.1.14"
   }
 }

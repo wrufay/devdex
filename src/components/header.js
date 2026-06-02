@@ -25,7 +25,7 @@ export function createHeader(screen) {
 
       header.setContent(
         `{cyan-fg}{bold}Study Terminal{/bold}{/cyan-fg}   {gray-fg}hey, ${username}{/gray-fg}\n` +
-        `{yellow-fg}Lv.${levelInfo.level}{/yellow-fg} {gray-fg}${title}{/gray-fg}   {red-fg}Streak: ${progress.current_streak} day${progress.current_streak !== 1 ? 's' : ''}{/red-fg}\n` +
+        `{yellow-fg}Lv.${levelInfo.level}{/yellow-fg} {gray-fg}${title}{/gray-fg}   {red-fg}Streak: ${progress.current_streak} day${progress.current_streak !== 1 ? 's' : ''}{/red-fg}   {yellow-fg}Coins: ${progress.coins ?? 0}{/yellow-fg}\n` +
         `{green-fg}XP: ${levelInfo.currentXp}/${levelInfo.xpToNext}{/green-fg} {gray-fg}${bar}{/gray-fg}`
       );
       screen.render();

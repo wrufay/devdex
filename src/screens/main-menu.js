@@ -22,6 +22,7 @@ export async function renderMainMenu(screen, navigate) {
     'Create Flashcard',
     'Browse Decks',
     'Dashboard & Stats',
+    'Leaderboard',
     'Quit',
   ];
 
@@ -43,6 +44,6 @@ export async function renderMainMenu(screen, navigate) {
   list.focus();
   screen.render();
 
-  const values = ['study', 'quiz', 'cram', 'create', 'decks', 'dashboard', 'quit'];
+  const values = ['study', 'quiz', 'cram', 'create', 'decks', 'dashboard', 'social', 'quit'];
   list.on('select', (_, index) => navigate(values[index]));
 }

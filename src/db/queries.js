@@ -192,6 +192,12 @@ export async function getUserProgress() {
   return data;
 }
 
+export async function addCoins(amount) {
+  const progress = await getUserProgress();
+  const { data: { user } } = await supabase.auth.getUser();
+  await supabase.from('user_progress').update({ coins: (progress.coins ?? 0) + amount }).eq('user_id', user.id);
+}
+
 export async function addXp(amount) {
   const progress = await getUserProgress();
   const { data: { user } } = await supabase.auth.getUser();
@@ -253,4 +259,86 @@ export async function getUpcomingReviewCounts() {
   ]);
 
   return { tomorrow: tomorrowCount, thisWeek: weekCount };
+}
+
+// === Social ===
+
+export async function getLeaderboard(limit = 20) {
+  const { data, error } = await supabase
+    .from('public_leaderboard')
+    .select('*')
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
+export async function getUserProfile(userId) {
+  const { data, error } = await supabase
+    .from('public_leaderboard')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getPublicDecks(userId) {
+  const { data, error } = await supabase
+    .from('decks')
+    .select('*, cards(count)')
+    .eq('user_id', userId)
+    .eq('is_public', true);
+  if (error) throw error;
+  return data;
+}
+
+export async function setDeckPublic(deckId, isPublic) {
+  const { error } = await supabase
+    .from('decks')
+    .update({ is_public: isPublic })
+    .eq('id', deckId);
+  if (error) throw error;
+}
+
+export async function saveDeck(sourceDeckId) {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: deck, error: deckErr } = await supabase
+    .from('decks')
+    .select('*')
+    .eq('id', sourceDeckId)
+    .single();
+  if (deckErr) throw deckErr;
+
+  const { data: cards, error: cardsErr } = await supabase
+    .from('cards')
+    .select('*')
+    .eq('deck_id', sourceDeckId);
+  if (cardsErr) throw cardsErr;
+
+  const { data: newDeck, error: newDeckErr } = await supabase
+    .from('decks')
+    .insert({ name: deck.name, topic: deck.topic, user_id: user.id, is_public: false })
+    .select()
+    .single();
+  if (newDeckErr) throw newDeckErr;
+
+  if (cards.length > 0) {
+    const newCards = cards.map(c => ({
+      deck_id: newDeck.id,
+      user_id: user.id,
+      type: c.type,
+      front: c.front,
+      back: c.back,
+      choices: c.choices,
+      correct_choice: c.correct_choice,
+      tags: c.tags,
+      difficulty_tier: c.difficulty_tier,
+    }));
+    const { error: insertErr } = await supabase.from('cards').insert(newCards);
+    if (insertErr) throw insertErr;
+  }
+
+  await supabase.from('decks').update({ card_count: cards.length }).eq('id', newDeck.id);
+  return newDeck;
 }

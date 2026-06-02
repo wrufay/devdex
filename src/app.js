@@ -6,6 +6,7 @@ import { renderDashboard } from './screens/dashboard.js';
 import { renderDeckBrowser } from './screens/deck-browser.js';
 import { renderCreateCard } from './screens/create-card.js';
 import { renderCramMode } from './screens/cram-mode.js';
+import { renderSocial } from './screens/social.js';
 
 const screens = {
   auth: renderAuth,
@@ -16,6 +17,7 @@ const screens = {
   dashboard: renderDashboard,
   decks: renderDeckBrowser,
   create: renderCreateCard,
+  social: renderSocial,
 };
 
 export function createNavigate(screen) {
