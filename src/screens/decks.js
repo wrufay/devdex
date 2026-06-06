@@ -21,12 +21,12 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
     border: { type: "line" },
     style: { border: { fg: "cyan" } },
     tags: true,
-    label: ` ☆ ${title} `,
+    label: ` ${title} `,
   });
 
   const hint = pick
-    ? "{gray-fg}enter = choose  ·  n = new deck  ·  esc = back{/gray-fg}"
-    : "{gray-fg}enter = open  ·  n = new deck  ·  d = delete  ·  esc = back{/gray-fg}";
+    ? "{gray-fg}Enter = choose  ·  n = new deck  ·  Esc = back{/gray-fg}"
+    : "{gray-fg}Enter = open  ·  n = new deck  ·  d = delete  ·  Esc = back{/gray-fg}";
   const status = blessed.text({
     parent: box,
     bottom: 1,
@@ -69,14 +69,14 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
     const items = [];
     if (showAll) {
       const totalDue = decks.reduce((n, d) => n + d.due, 0);
-      items.push(`{cyan-fg}✧ all decks{/cyan-fg}  {gray-fg}(${totalDue} due){/gray-fg}`);
+      items.push(`{cyan-fg}all decks{/cyan-fg}  {gray-fg}(${totalDue} due){/gray-fg}`);
     }
     if (decks.length === 0 && !showAll) {
-      items.push("{gray-fg}no decks yet — press n to make one{/gray-fg}");
+      items.push("{gray-fg}no decks yet. press n to create one.{/gray-fg}");
     } else {
       for (const d of decks) {
         items.push(
-          `☆ ${d.name}  {gray-fg}(${d.total} cards · ${d.due} due){/gray-fg}`
+          `${d.name}  {gray-fg}(${d.total} cards · ${d.due} due){/gray-fg}`
         );
       }
     }
@@ -147,7 +147,7 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
       if (armedId !== deck.id) {
         armedId = deck.id;
         status.setContent(
-          `{red-fg}press d again to delete "${deck.name}" + its cards · esc cancels{/red-fg}`
+          `{red-fg}press d again to delete "${deck.name}" and its cards · Esc cancels{/red-fg}`
         );
         screen.render();
         return;

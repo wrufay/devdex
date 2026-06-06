@@ -21,7 +21,7 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
     border: { type: "line" },
     style: { border: { fg: "cyan" } },
     tags: true,
-    label: ` ☼ reviewing ${scopeName} `,
+    label: ` reviewing ${scopeName} `,
   });
 
   const content = blessed.text({
@@ -60,9 +60,9 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
 
   if (cards.length === 0) {
     content.setContent(
-      "{green-fg}{bold}all caught up! ♡{/bold}{/green-fg}\n\nno cards are due for review."
+      "{green-fg}{bold}all caught up.{/bold}{/green-fg}\n\nno cards are due for review."
     );
-    footer.setContent("{gray-fg}esc = back to menu{/gray-fg}");
+    footer.setContent("{gray-fg}Esc = back to menu{/gray-fg}");
     box.key(["escape"], () => navigate("menu"));
     screen.render();
     return;
@@ -79,7 +79,7 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
         `{bold}${card.front}{/bold}`
     );
     footer.setContent(
-      "{gray-fg}space/enter = show answer  ·  esc = back{/gray-fg}"
+      "{gray-fg}Space/Enter = show answer  ·  Esc = back{/gray-fg}"
     );
     screen.render();
   }
@@ -113,9 +113,9 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
     index += 1;
     if (index >= cards.length) {
       content.setContent(
-        "{green-fg}{bold}session complete! △{/bold}{/green-fg}\n\nyou reviewed every due card."
+        "{green-fg}{bold}session complete.{/bold}{/green-fg}\n\nyou reviewed every due card."
       );
-      footer.setContent("{gray-fg}esc = back to menu{/gray-fg}");
+      footer.setContent("{gray-fg}Esc = back to menu{/gray-fg}");
       screen.render();
       return;
     }

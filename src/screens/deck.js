@@ -11,11 +11,11 @@ export async function renderDeck(screen, navigate, { deck }) {
     border: { type: "line" },
     style: { border: { fg: "cyan" } },
     tags: true,
-    label: ` ☆ ${deck.name} `,
+    label: ` ${deck.name} `,
   });
 
   const hint =
-    "{gray-fg}n = new card  ·  r = review deck  ·  d = delete card  ·  esc = back{/gray-fg}";
+    "{gray-fg}n = new card  ·  r = review deck  ·  d = delete card  ·  Esc = back{/gray-fg}";
   const status = blessed.text({
     parent: box,
     bottom: 1,
@@ -53,7 +53,7 @@ export async function renderDeck(screen, navigate, { deck }) {
       return;
     }
     if (cards.length === 0) {
-      list.setItems(["{gray-fg}no cards yet — press n to add one{/gray-fg}"]);
+      list.setItems(["{gray-fg}no cards yet. press n to add one.{/gray-fg}"]);
     } else {
       list.setItems(
         cards.map((c) => `{bold}${c.front}{/bold}  {gray-fg}→ ${c.back}{/gray-fg}`)

@@ -16,12 +16,13 @@ export async function renderMenu(screen, navigate) {
   // Entire login container
   const box = blessed.box({
     top: "center",
+    left: "center",
     width: "50%",
     height: 20,
     border: { type: "line" },
     style: { border: { fg: "cyan" } },
     tags: true,
-    label: "☻ cli_cards.git",
+    label: " cli_cards.git ",
   });
 
   const list = blessed.list({
@@ -38,17 +39,17 @@ export async function renderMenu(screen, navigate) {
       item: { fg: "white" },
     },
     items: [
-      `☼ start review  {gray-fg}(${dueCount} due){/gray-fg}`,
-      "✍︎ new card",
-      "☆ my decks, etc.",
-      "sign out",
-      "quit app",
+      `review due cards  {gray-fg}(${dueCount} due){/gray-fg}`,
+      "new card",
+      "my decks",
+      "SIGN OUT",
+      "QUIT",
     ],
   });
 
   box.setContent(
-    `{cyan-fg}{bold}welcome back, ${name}.{/bold}{/cyan-fg}\n` +
-      `{gray-fg}Use arrow keys + Enter. Ctrl-C to quit.{/gray-fg}`
+    `{cyan-fg}{bold}welcome back, ${name}{/bold}{/cyan-fg}\n` +
+      `{gray-fg}arrow keys + Enter to select · Ctrl-C to quit{/gray-fg}`
   );
 
   screen.append(box);

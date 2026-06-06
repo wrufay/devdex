@@ -10,6 +10,29 @@ function openBrowser(url) {
   exec(cmd);
 }
 
+// Barebones styling for the browser callback pages: white background, black text.
+const PAGE_CSS = `
+  body {
+    margin: 0; min-height: 100vh; padding: 40px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    background: #fff; color: #000;
+    font-family: sans-serif;
+  }
+`;
+
+function htmlPage(inner) {
+  return `<!DOCTYPE html><html lang="en"><head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>cli_cards</title>
+    <style>${PAGE_CSS}</style>
+  </head><body>${inner}</body></html>`;
+}
+
+const SUCCESS_INNER =
+  "<h1>you're in!</h1>" +
+  "<p>head back to your terminal + you can close this tab</p>";
+
 function startCallbackServer() {
   return new Promise((resolve, reject) => {
     const server = createServer((req, res) => {
@@ -19,21 +42,23 @@ function startCallbackServer() {
       if (!code) {
         // The OAuth code may arrive in the URL fragment; bounce it back as a query.
         res.writeHead(200, { "Content-Type": "text/html" });
-        res.end(`<html><body style="font-family:monospace;background:#000;color:#0f0;padding:40px">
-          <h2>Completing auth...</h2>
-          <script>
-            const code = new URLSearchParams(window.location.search).get('code')
-              || new URLSearchParams(window.location.hash.slice(1)).get('code');
-            if (code) fetch('/?code=' + code).then(() => {
-              document.body.innerHTML = '<h2>Done! Return to terminal.</h2>';
-            });
-          </script></body></html>`);
+        res.end(
+          htmlPage(
+            "<h1>signing you in...</h1>" +
+              `<script>
+                const code = new URLSearchParams(location.search).get('code')
+                  || new URLSearchParams(location.hash.slice(1)).get('code');
+                if (code) fetch('/?code=' + code).then(() => {
+                  document.body.innerHTML = ${JSON.stringify(SUCCESS_INNER)};
+                });
+              </script>`
+          )
+        );
         return;
       }
 
       res.writeHead(200, { "Content-Type": "text/html" });
-      res.end(`<html><body style="font-family:monospace;background:#000;color:#0f0;padding:40px">
-        <h2>Auth successful!</h2><p>You can close this tab.</p></body></html>`);
+      res.end(htmlPage(SUCCESS_INNER));
       server.close();
       resolve(code);
     });
@@ -53,12 +78,10 @@ export async function renderAuth(screen, navigate) {
   }
 
   const idleContent =
-    "\n{center}{cyan-fg}{bold}✧ fay wu ✧{/bold}{/cyan-fg}{/center}\n\n" +
-    "{center}hi there! welcome to {bold}cli_cards{/bold} ♡{/center}\n\n" +
-    "{center}{blue-fg}✧{/blue-fg} spaced repetition, in your terminal{/center}\n" +
-    "{center}{blue-fg}✧{/blue-fg} github login, saved to the cloud{/center}\n" +
-    "{center}{blue-fg}✧{/blue-fg} flip cards, grow your brain △{/center}\n\n" +
-    "{center}{gray-fg}press enter to sign in with github →{/gray-fg}{/center}";
+    "\n{center}{cyan-fg}{bold}cli_cards{/bold}{/cyan-fg}{/center}\n\n" +
+    "{center}spaced repetition flashcards, in your terminal{/center}\n\n" +
+    "{center}{gray-fg}GitHub login, saved to Supabase{/gray-fg}{/center}\n\n" +
+    "{center}{gray-fg}press Enter to sign in with GitHub{/gray-fg}{/center}";
 
   const box = blessed.box({
     top: "center",
@@ -85,9 +108,9 @@ export async function renderAuth(screen, navigate) {
     started = true;
 
     box.setContent(
-      "\n{center}{cyan-fg}{bold}✧ fay wu ✧{/bold}{/cyan-fg}{/center}\n\n\n" +
-        "{center}{white-fg}opening github in your browser...{/white-fg}{/center}\n\n" +
-        "{center}{gray-fg}finish signing in over there, then come back ♡{/gray-fg}{/center}"
+      "\n{center}{cyan-fg}{bold}cli_cards{/bold}{/cyan-fg}{/center}\n\n\n" +
+        "{center}{white-fg}opening GitHub in your browser...{/white-fg}{/center}\n\n" +
+        "{center}{gray-fg}finish signing in, then come back here{/gray-fg}{/center}"
     );
     screen.render();
 
@@ -113,7 +136,7 @@ export async function renderAuth(screen, navigate) {
       navigate("menu");
     } catch (err) {
       box.setContent(
-        `\n{center}{red-fg}{bold}hmm, sign-in didn't work{/bold}{/red-fg}{/center}\n\n` +
+        `\n{center}{red-fg}{bold}sign-in failed{/bold}{/red-fg}{/center}\n\n` +
           `{center}{red-fg}${err.message}{/red-fg}{/center}\n\n` +
           `{center}{gray-fg}press any key to try again{/gray-fg}{/center}`
       );

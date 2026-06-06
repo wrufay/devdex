@@ -12,7 +12,7 @@ export function renderCreate(screen, navigate, { deck }) {
     border: { type: "line" },
     style: { border: { fg: "cyan" } },
     tags: true,
-    label: ` ✍︎ new card in ${deck.name} `,
+    label: ` new card in ${deck.name} `,
   });
 
   blessed.text({ parent: box, top: 1, left: 2, content: "front:" });
@@ -45,7 +45,7 @@ export function renderCreate(screen, navigate, { deck }) {
     left: 2,
     right: 2,
     tags: true,
-    content: "{gray-fg}enter to move between fields · esc to cancel{/gray-fg}",
+    content: "{gray-fg}Enter to move between fields · Esc to cancel{/gray-fg}",
   });
 
   screen.append(box);
