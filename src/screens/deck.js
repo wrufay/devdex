@@ -72,6 +72,7 @@ export async function renderDeck(screen, navigate, { deck }) {
       await deleteCard(card.id);
       await refresh();
       status.setContent(`{green-fg}deleted.{/green-fg} ${hint}`);
+      screen.render();
     } catch (err) {
       status.setContent(`{red-fg}${err.message}{/red-fg}`);
       screen.render();
