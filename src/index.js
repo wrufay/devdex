@@ -5,7 +5,7 @@ import { createNavigate } from './app.js';
 
 export const screen = blessed.screen({
   smartCSR: true,
-  title: 'Study Terminal',
+  title: 'Flashcards',
   fullUnicode: false,
 });
 

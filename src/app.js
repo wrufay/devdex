@@ -1,43 +1,28 @@
 import { renderAuth } from './screens/auth.js';
-import { renderMainMenu } from './screens/main-menu.js';
-import { renderStudySession } from './screens/study-session.js';
-import { renderQuizMode } from './screens/quiz-mode.js';
-import { renderDashboard } from './screens/dashboard.js';
-import { renderDeckBrowser } from './screens/deck-browser.js';
-import { renderCreateCard } from './screens/create-card.js';
-import { renderCramMode } from './screens/cram-mode.js';
-import { renderSocial } from './screens/social.js';
+import { renderMenu } from './screens/menu.js';
+import { renderCreate } from './screens/create-card.js';
+import { renderList } from './screens/list-cards.js';
+import { renderReview } from './screens/review.js';
 
-const screens = {
+const routes = {
   auth: renderAuth,
-  menu: renderMainMenu,
-  study: renderStudySession,
-  quiz: renderQuizMode,
-  cram: renderCramMode,
-  dashboard: renderDashboard,
-  decks: renderDeckBrowser,
-  create: renderCreateCard,
-  social: renderSocial,
+  menu: renderMenu,
+  create: renderCreate,
+  list: renderList,
+  review: renderReview,
 };
 
+// Returns a navigate(name) function that clears the screen and renders a route.
 export function createNavigate(screen) {
   function navigate(name) {
-    if (name === 'quit') {
-      screen.destroy();
-      process.exit(0);
-    }
+    // Tear down whatever is currently mounted.
+    for (const child of [...screen.children]) screen.remove(child);
+    screen.realloc();
 
-    screen.children.slice().forEach(c => c.destroy());
-
-    const fn = screens[name];
-    if (!fn) return;
-
-    fn(screen, navigate).catch(err => {
-      try { screen.destroy(); } catch (_) {}
-      process.stderr.write(`\nError in ${name}: ${err?.stack || err}\n`);
-      process.exit(1);
-    });
+    const render = routes[name];
+    if (!render) throw new Error(`Unknown route: ${name}`);
+    render(screen, navigate);
+    screen.render();
   }
-
   return navigate;
 }

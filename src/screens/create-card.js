@@ -1,181 +1,65 @@
 import blessed from 'neo-blessed';
-import { createHeader, HEADER_HEIGHT } from '../components/header.js';
-import { createDeck, createCard, getAllDecks, addXp } from '../db/queries.js';
+import { createCard } from '../db/queries.js';
 
-export async function renderCreateCard(screen, navigate) {
-  async function showDeckSelect() {
-    screen.children.slice().forEach(c => c.destroy());
+export function renderCreate(screen, navigate) {
+  const box = blessed.box({
+    top: 'center', left: 'center', width: '60%', height: 16,
+    border: { type: 'double' },
+    style: { border: { fg: 'blue' } },
+    tags: true,
+    label: ' Create card ',
+  });
 
-    const header = createHeader(screen);
-    screen.append(header);
+  blessed.text({ parent: box, top: 1, left: 2, content: 'Front:' });
+  const frontInput = blessed.textbox({
+    parent: box, top: 2, left: 2, right: 2, height: 3,
+    border: { type: 'line' },
+    inputOnFocus: true,
+    style: { border: { fg: 'gray' }, focus: { border: { fg: 'cyan' } } },
+  });
 
-    const decks = await getAllDecks();
+  blessed.text({ parent: box, top: 6, left: 2, content: 'Back:' });
+  const backInput = blessed.textbox({
+    parent: box, top: 7, left: 2, right: 2, height: 3,
+    border: { type: 'line' },
+    inputOnFocus: true,
+    style: { border: { fg: 'gray' }, focus: { border: { fg: 'cyan' } } },
+  });
 
-    const label = blessed.text({
-      top: HEADER_HEIGHT + 1, left: 2, tags: true,
-      content: '{cyan-fg}{bold}Create a Flashcard{/bold}{/cyan-fg}  {gray-fg}Select a deck:{/gray-fg}',
-    });
-    screen.append(label);
+  const status = blessed.text({
+    parent: box, bottom: 1, left: 2, right: 2, tags: true,
+    content: '{gray-fg}Tab/Enter to move between fields. Esc to cancel.{/gray-fg}',
+  });
 
-    const items = [
-      ...decks.map(d => `${d.name}  (${d.card_count} cards)`),
-      '+ Create New Deck',
-      '<- Back to Menu',
-    ];
+  screen.append(box);
 
-    const list = blessed.list({
-      top: HEADER_HEIGHT + 3, left: 2, width: '60%',
-      height: `100%-${HEADER_HEIGHT + 4}`,
-      items, keys: true, vi: true, mouse: true,
-      style: {
-        selected: { bg: 'blue', fg: 'white', bold: true },
-        item: { fg: 'white' },
-      },
-    });
-
-    screen.append(list);
-    list.focus();
+  async function save() {
+    const front = frontInput.getValue().trim();
+    const back = backInput.getValue().trim();
+    if (!front || !back) {
+      status.setContent('{red-fg}Both front and back are required.{/red-fg}');
+      screen.render();
+      frontInput.focus();
+      return;
+    }
+    status.setContent('{gray-fg}Saving...{/gray-fg}');
     screen.render();
-
-    list.key(['escape'], () => navigate('menu'));
-    list.on('select', (_, index) => {
-      if (index === items.length - 1) { navigate('menu'); return; }
-      if (index === items.length - 2) { showNewDeck(); return; }
-      showFront(decks[index].id);
-    });
+    try {
+      await createCard(front, back);
+      navigate('menu');
+    } catch (err) {
+      status.setContent(`{red-fg}${err.message}{/red-fg}`);
+      screen.render();
+      frontInput.focus();
+    }
   }
 
-  async function showNewDeck() {
-    screen.children.slice().forEach(c => c.destroy());
+  // Field navigation.
+  frontInput.key(['escape'], () => navigate('menu'));
+  backInput.key(['escape'], () => navigate('menu'));
+  frontInput.on('submit', () => backInput.focus());
+  backInput.on('submit', save);
 
-    const header = createHeader(screen);
-    screen.append(header);
-
-    const label = blessed.text({
-      top: HEADER_HEIGHT + 1, left: 2, tags: true,
-      content: '{cyan-fg}{bold}Create a New Deck{/bold}{/cyan-fg}\n\n{gray-fg}Enter deck name:{/gray-fg}',
-    });
-    screen.append(label);
-
-    const input = blessed.textbox({
-      top: HEADER_HEIGHT + 5, left: 2, width: '60%', height: 3,
-      border: { type: 'line' },
-      style: { border: { fg: 'cyan' }, focus: { border: { fg: 'cyan' } } },
-      inputOnFocus: true, keys: true,
-    });
-    screen.append(input);
-    input.focus();
-    screen.render();
-
-    input.key(['escape'], () => showDeckSelect());
-    input.once('submit', async (value) => {
-      if (!value?.trim()) { showNewDeck(); return; }
-      const id = await createDeck(value.trim(), value.trim()).catch(console.error);
-      showFront(id);
-    });
-    input.readInput();
-  }
-
-  function showFront(deckId) {
-    screen.children.slice().forEach(c => c.destroy());
-
-    const header = createHeader(screen);
-    screen.append(header);
-
-    const label = blessed.text({
-      top: HEADER_HEIGHT + 1, left: 2, tags: true,
-      content: '{cyan-fg}{bold}Create a Flashcard{/bold}{/cyan-fg}\n\n{gray-fg}Question (front of card):{/gray-fg}',
-    });
-    screen.append(label);
-
-    const input = blessed.textbox({
-      top: HEADER_HEIGHT + 5, left: 2, width: '80%', height: 3,
-      border: { type: 'line' },
-      style: { border: { fg: 'cyan' }, focus: { border: { fg: 'cyan' } } },
-      inputOnFocus: true, keys: true,
-    });
-    screen.append(input);
-    input.focus();
-    screen.render();
-
-    input.key(['escape'], () => navigate('menu'));
-    input.once('submit', (value) => {
-      if (!value?.trim()) { showFront(deckId); return; }
-      showBack(deckId, value.trim());
-    });
-    input.readInput();
-  }
-
-  function showBack(deckId, front) {
-    screen.children.slice().forEach(c => c.destroy());
-
-    const header = createHeader(screen);
-    screen.append(header);
-
-    const label = blessed.text({
-      top: HEADER_HEIGHT + 1, left: 2, tags: true,
-      content:
-        '{cyan-fg}{bold}Create a Flashcard{/bold}{/cyan-fg}\n\n' +
-        `{yellow-fg}Question: ${front}{/yellow-fg}\n\n` +
-        '{gray-fg}Answer (back of card):{/gray-fg}',
-    });
-    screen.append(label);
-
-    const input = blessed.textbox({
-      top: HEADER_HEIGHT + 7, left: 2, width: '80%', height: 3,
-      border: { type: 'line' },
-      style: { border: { fg: 'green' }, focus: { border: { fg: 'green' } } },
-      inputOnFocus: true, keys: true,
-    });
-    screen.append(input);
-    input.focus();
-    screen.render();
-
-    input.key(['escape'], () => navigate('menu'));
-    input.once('submit', async (value) => {
-      if (!value?.trim()) { showBack(deckId, front); return; }
-      await createCard(deckId, 'flashcard', front, value.trim(), { tags: ['manual'] }).catch(console.error);
-      await addXp(5).catch(console.error);
-      showSuccess(deckId, front, value.trim());
-    });
-    input.readInput();
-  }
-
-  function showSuccess(_deckId, front, back) {
-    screen.children.slice().forEach(c => c.destroy());
-
-    const header = createHeader(screen);
-    screen.append(header);
-
-    const info = blessed.box({
-      top: HEADER_HEIGHT, left: 0, width: '100%', height: `100%-${HEADER_HEIGHT}`,
-      tags: true, padding: { left: 2, top: 1 },
-      content:
-        '{green-fg}{bold}Flashcard Created!{/bold}{/green-fg}\n\n' +
-        `{gray-fg}Front: ${front}{/gray-fg}\n` +
-        `{gray-fg}Back: ${back}{/gray-fg}\n\n` +
-        '{cyan-fg}+5 XP earned{/cyan-fg}\n',
-    });
-    screen.append(info);
-
-    const actions = blessed.list({
-      top: HEADER_HEIGHT + 8, left: 2, width: '40%', height: 4,
-      items: ['Create Another Card', 'Back to Menu'],
-      keys: true, vi: true, mouse: true,
-      style: {
-        selected: { bg: 'blue', fg: 'white', bold: true },
-        item: { fg: 'white' },
-      },
-    });
-    screen.append(actions);
-    actions.focus();
-    screen.render();
-
-    actions.on('select', (_, index) => {
-      if (index === 0) showDeckSelect();
-      else navigate('menu');
-    });
-  }
-
-  showDeckSelect();
+  frontInput.focus();
+  screen.render();
 }

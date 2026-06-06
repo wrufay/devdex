@@ -1,70 +1,59 @@
-# CLI Flashcard Study App
+# Flashcards
 
-A terminal-based flashcard app with spaced repetition, quiz mode, cram mode, and XP/streak tracking.
+A barebones terminal flashcard app: sign in with GitHub, create cards, delete
+cards, and review them with the SM-2 spaced-repetition algorithm. Built with
+[neo-blessed](https://github.com/embarklabs/neo-blessed) and
+[Supabase](https://supabase.com).
 
 ## Setup
 
-1. Clone this repo
-```bash
-git clone https://github.com/<your-username-here>/cli_136.git
-cd cli_136
-```
+1. Install dependencies:
 
-2. Install dependencies
-```bash
-npm install
-```
+   ```sh
+   npm install
+   ```
 
-3. Start the application
-```bash
+2. Create a Supabase project and run the schema in `supabase-schema.sql` (SQL
+   Editor → paste → run).
+
+3. In Supabase, enable the **GitHub** auth provider (Authentication → Providers).
+   Create a GitHub OAuth app with the callback URL pointing at your Supabase
+   project's `/auth/v1/callback`, and add `http://localhost:54321` to the
+   allowed redirect URLs (Authentication → URL Configuration).
+
+4. Copy `.env.example` to `.env` and fill in your project credentials:
+
+   ```sh
+   cp .env.example .env
+   ```
+
+   ```
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_ANON_KEY=your-anon-key-here
+   ```
+
+## Run
+
+```sh
 npm start
 ```
 
-### ENJOY ! 🩶
+The app opens GitHub in your browser for sign-in. Your session is cached in
+`~/.study-terminal/session.json`, so you stay logged in between runs.
 
-## Stack
+## Controls
 
-| Layer | Tech |
-|---|---|
-| Runtime | Node.js (ESM) |
-| UI | React + [Ink](https://github.com/vadimdemedes/ink) |
-| Database | SQLite via `better-sqlite3` |
-| Build | esbuild |
+- **Menu** — arrow keys + Enter.
+- **Create** — type the front, Enter, type the back, Enter to save. Esc cancels.
+- **My cards** — arrow keys to select, `d` or Enter to delete, Esc to go back.
+- **Review** — Space/Enter reveals the answer, then rate recall:
+  `1` Again · `2` Hard · `3` Good · `4` Easy. Esc returns to the menu.
 
-## Architecture
+Ctrl-C quits from anywhere.
 
-```
-src/
-├── index.js          # Entry point — init DB, render app
-├── app.js            # Root component, screen router
-├── screens/          # One component per screen (study, quiz, cram, etc.)
-├── engine/
-│   ├── sm2.js        # SM-2 spaced repetition algorithm
-│   ├── scheduler.js  # Card scheduling logic
-│   └── xp.js         # XP calculation
-├── db/
-│   ├── schema.js     # Table definitions (decks, cards, review_logs, user_progress)
-│   ├── queries.js    # All SQL queries
-│   └── connection.js # SQLite connection singleton
-└── components/       # Shared UI components (header, etc.)
-```
+## How scheduling works
 
-**Data flow:** screens call engine functions → engine reads/writes via db/queries → SQLite persists to `data/study.db`
-
-## Features
-
-- Spaced repetition (SM-2 algorithm)
-- Quiz mode (multiple choice)
-- Cram mode
-- XP and streak tracking
-- Dashboard & stats
-- Manual flashcard creation
-
-## TODO / Roadmap
-
-- [ ] Levels and progression based on XP
-- [ ] Achievements and badges (streaks, milestones)
-- [ ] Daily challenges with bonus XP
-- [ ] Edit existing flashcards
-- [ ] Add personal notes to flashcards
-- [ ] Type-in answer mode
+Each card tracks SM-2 state (`repetitions`, `ease_factor`, `interval`,
+`next_review`). When you rate a card, `src/engine/sm2.js` computes the next
+interval and review date. The review screen only shows cards whose `next_review`
+is today or earlier.
