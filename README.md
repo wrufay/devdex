@@ -35,7 +35,7 @@ ui: [neo-blessed](https://github.com/embarklabs/neo-blessed)
 
 ## algorithm
 
-- we love all things spaced repetition. so we implemented it [here](sm2.js), from scratch.
+- we love all things spaced repetition. so we implemented it here from scratch.
 
 ## lmk
 

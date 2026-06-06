@@ -3,13 +3,10 @@ import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY in .env');
-  process.exit(1);
-}
+// Hardcoded Supabase credentials. The anon/publishable key is safe to ship in
+// client code — row-level security is what actually protects the data.
+const SUPABASE_URL = 'https://zvumlsofrlgpkbhyefwy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_YMZg14wa7wkRnuyRLWGJog_ghWoq8aJ';
 
 const SESSION_DIR = join(homedir(), '.study-terminal');
 const SESSION_FILE = join(SESSION_DIR, 'session.json');
