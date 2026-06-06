@@ -10,7 +10,6 @@ study, learn and review from anywhere - especially your favourite text editor li
 
 **minimalist:** no need for gui - just some commands and our brains are growing 🔺
 
-
 ## easy login; everything saved in one place
 
 - github oauth + supabase postgres db. secure !
@@ -31,7 +30,6 @@ npm start
 runtime: node.js 20+
 
 ui: [neo-blessed](https://github.com/embarklabs/neo-blessed)
-
 
 ## algorithm
 

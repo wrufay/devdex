@@ -1,8 +1,8 @@
-import { renderAuth } from './screens/auth.js';
-import { renderMenu } from './screens/menu.js';
-import { renderCreate } from './screens/create-card.js';
-import { renderList } from './screens/list-cards.js';
-import { renderReview } from './screens/review.js';
+import { renderAuth } from "./screens/auth.js";
+import { renderMenu } from "./screens/menu.js";
+import { renderCreate } from "./screens/create-card.js";
+import { renderList } from "./screens/list-cards.js";
+import { renderReview } from "./screens/review.js";
 
 const routes = {
   auth: renderAuth,
