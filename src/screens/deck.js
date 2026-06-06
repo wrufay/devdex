@@ -1,25 +1,28 @@
 import blessed from "neo-blessed";
 import { listCards, deleteCard } from "../db/queries.js";
 
-export async function renderList(screen, navigate) {
+// A single deck's cards. Reached from the decks manager.
+export async function renderDeck(screen, navigate, { deck }) {
   const box = blessed.box({
     top: "center",
     left: "center",
     width: "70%",
     height: "80%",
-    border: { type: "double" },
-    style: { border: { fg: "blue" } },
+    border: { type: "line" },
+    style: { border: { fg: "cyan" } },
     tags: true,
-    label: " My cards ",
+    label: ` ☆ ${deck.name} `,
   });
 
+  const hint =
+    "{gray-fg}n = new card  ·  r = review deck  ·  d = delete card  ·  esc = back{/gray-fg}";
   const status = blessed.text({
     parent: box,
     bottom: 1,
     left: 2,
     right: 2,
     tags: true,
-    content: "{gray-fg}Enter/d = delete  ·  Esc = back{/gray-fg}",
+    content: hint,
   });
 
   const list = blessed.list({
@@ -43,21 +46,17 @@ export async function renderList(screen, navigate) {
 
   async function refresh() {
     try {
-      cards = await listCards();
+      cards = await listCards(deck.id);
     } catch (err) {
       status.setContent(`{red-fg}${err.message}{/red-fg}`);
       screen.render();
       return;
     }
     if (cards.length === 0) {
-      list.setItems([
-        "{gray-fg}No cards yet. Create one from the menu.{/gray-fg}",
-      ]);
+      list.setItems(["{gray-fg}no cards yet — press n to add one{/gray-fg}"]);
     } else {
       list.setItems(
-        cards.map(
-          (c) => `{bold}${c.front}{/bold}  {gray-fg}→ ${c.back}{/gray-fg}`
-        )
+        cards.map((c) => `{bold}${c.front}{/bold}  {gray-fg}→ ${c.back}{/gray-fg}`)
       );
     }
     list.select(0);
@@ -65,26 +64,24 @@ export async function renderList(screen, navigate) {
   }
 
   async function removeSelected() {
-    const index = list.selected;
-    const card = cards[index];
+    const card = cards[list.selected];
     if (!card) return;
-    status.setContent("{gray-fg}Deleting...{/gray-fg}");
+    status.setContent("{gray-fg}deleting...{/gray-fg}");
     screen.render();
     try {
       await deleteCard(card.id);
-      status.setContent(
-        "{green-fg}Deleted.{/green-fg} {gray-fg}Enter/d = delete · Esc = back{/gray-fg}"
-      );
       await refresh();
+      status.setContent(`{green-fg}deleted.{/green-fg} ${hint}`);
     } catch (err) {
       status.setContent(`{red-fg}${err.message}{/red-fg}`);
       screen.render();
     }
   }
 
-  list.key(["escape"], () => navigate("menu"));
+  list.key(["escape"], () => navigate("decks"));
+  list.key(["n"], () => navigate("create", { deck }));
+  list.key(["r"], () => navigate("review", { deck }));
   list.key(["d"], removeSelected);
-  list.on("select", removeSelected);
 
   list.focus();
   await refresh();

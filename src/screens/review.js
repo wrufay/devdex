@@ -4,22 +4,24 @@ import { schedule } from "../engine/sm2.js";
 
 // Rating keys mapped to SM-2 quality scores.
 const RATINGS = [
-  { key: "1", label: "Again", quality: 0, color: "red" },
-  { key: "2", label: "Hard", quality: 3, color: "yellow" },
-  { key: "3", label: "Good", quality: 4, color: "green" },
-  { key: "4", label: "Easy", quality: 5, color: "cyan" },
+  { key: "1", label: "again", quality: 0, color: "red" },
+  { key: "2", label: "hard", quality: 3, color: "yellow" },
+  { key: "3", label: "good", quality: 4, color: "green" },
+  { key: "4", label: "easy", quality: 5, color: "cyan" },
 ];
 
-export async function renderReview(screen, navigate) {
+export async function renderReview(screen, navigate, { deck, all } = {}) {
+  const scopeName = all ? "all decks" : deck ? deck.name : "review";
+
   const box = blessed.box({
     top: "center",
     left: "center",
     width: "70%",
     height: "60%",
-    border: { type: "double" },
-    style: { border: { fg: "blue" } },
+    border: { type: "line" },
+    style: { border: { fg: "cyan" } },
     tags: true,
-    label: " Review ",
+    label: ` ☼ reviewing ${scopeName} `,
   });
 
   const content = blessed.text({
@@ -47,7 +49,7 @@ export async function renderReview(screen, navigate) {
 
   let cards;
   try {
-    cards = await dueCards();
+    cards = await dueCards(all ? undefined : deck?.id);
   } catch (err) {
     content.setContent(`{red-fg}${err.message}{/red-fg}`);
     footer.setContent("{gray-fg}Esc = back{/gray-fg}");
@@ -58,9 +60,9 @@ export async function renderReview(screen, navigate) {
 
   if (cards.length === 0) {
     content.setContent(
-      "{green-fg}{bold}All caught up!{/bold}{/green-fg}\n\nNo cards are due for review."
+      "{green-fg}{bold}all caught up! ♡{/bold}{/green-fg}\n\nno cards are due for review."
     );
-    footer.setContent("{gray-fg}Esc = back to menu{/gray-fg}");
+    footer.setContent("{gray-fg}esc = back to menu{/gray-fg}");
     box.key(["escape"], () => navigate("menu"));
     screen.render();
     return;
@@ -73,11 +75,11 @@ export async function renderReview(screen, navigate) {
     showingBack = false;
     const card = cards[index];
     content.setContent(
-      `{gray-fg}Card ${index + 1} of ${cards.length}{/gray-fg}\n\n` +
+      `{gray-fg}card ${index + 1} of ${cards.length}{/gray-fg}\n\n` +
         `{bold}${card.front}{/bold}`
     );
     footer.setContent(
-      "{gray-fg}Space/Enter = show answer  ·  Esc = back{/gray-fg}"
+      "{gray-fg}space/enter = show answer  ·  esc = back{/gray-fg}"
     );
     screen.render();
   }
@@ -86,7 +88,7 @@ export async function renderReview(screen, navigate) {
     showingBack = true;
     const card = cards[index];
     content.setContent(
-      `{gray-fg}Card ${index + 1} of ${cards.length}{/gray-fg}\n\n` +
+      `{gray-fg}card ${index + 1} of ${cards.length}{/gray-fg}\n\n` +
         `{bold}${card.front}{/bold}\n\n{cyan-fg}${card.back}{/cyan-fg}`
     );
     footer.setContent(
@@ -111,9 +113,9 @@ export async function renderReview(screen, navigate) {
     index += 1;
     if (index >= cards.length) {
       content.setContent(
-        "{green-fg}{bold}Session complete!{/bold}{/green-fg}\n\nYou reviewed every due card."
+        "{green-fg}{bold}session complete! △{/bold}{/green-fg}\n\nyou reviewed every due card."
       );
-      footer.setContent("{gray-fg}Esc = back to menu{/gray-fg}");
+      footer.setContent("{gray-fg}esc = back to menu{/gray-fg}");
       screen.render();
       return;
     }

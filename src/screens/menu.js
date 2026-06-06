@@ -57,13 +57,15 @@ export async function renderMenu(screen, navigate) {
   list.on("select", async (_item, index) => {
     switch (index) {
       case 0:
-        navigate("review");
+        // Pick a deck to review (the decks screen offers an "all decks" option).
+        navigate("decks", { pick: "review" });
         break;
       case 1:
-        navigate("create");
+        // Pick a deck to add the new card to.
+        navigate("decks", { pick: "create" });
         break;
       case 2:
-        navigate("list");
+        navigate("decks");
         break;
       case 3:
         await supabase.auth.signOut();

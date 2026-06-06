@@ -52,17 +52,24 @@ export async function renderAuth(screen, navigate) {
     return;
   }
 
+  const idleContent =
+    "\n{center}{cyan-fg}{bold}✧ fay wu ✧{/bold}{/cyan-fg}{/center}\n\n" +
+    "{center}hi there! welcome to {bold}cli_cards{/bold} ♡{/center}\n\n" +
+    "{center}{blue-fg}✧{/blue-fg} spaced repetition, in your terminal{/center}\n" +
+    "{center}{blue-fg}✧{/blue-fg} github login, saved to the cloud{/center}\n" +
+    "{center}{blue-fg}✧{/blue-fg} flip cards, grow your brain △{/center}\n\n" +
+    "{center}{gray-fg}press enter to sign in with github →{/gray-fg}{/center}";
+
   const box = blessed.box({
     top: "center",
     left: "center",
     width: "60%",
-    height: 10,
-    border: { type: "double" },
-    style: { border: { fg: "blue" } },
+    height: 14,
+    border: { type: "line" },
+    style: { border: { fg: "cyan" } },
     tags: true,
     keys: true,
-    content:
-      "{cyan-fg}{bold}Flashcards{/bold}{/cyan-fg}\n\n{white-fg}Press Enter to sign in with GitHub.{/white-fg}\n\n{gray-fg}Ctrl-C to quit.{/gray-fg}",
+    content: idleContent,
   });
 
   screen.append(box);
@@ -78,7 +85,9 @@ export async function renderAuth(screen, navigate) {
     started = true;
 
     box.setContent(
-      "{cyan-fg}{bold}Flashcards{/bold}{/cyan-fg}\n\n{white-fg}Opening GitHub in your browser...{/white-fg}\n\n{gray-fg}Waiting for authorization. Complete it in your browser.{/gray-fg}"
+      "\n{center}{cyan-fg}{bold}✧ fay wu ✧{/bold}{/cyan-fg}{/center}\n\n\n" +
+        "{center}{white-fg}opening github in your browser...{/white-fg}{/center}\n\n" +
+        "{center}{gray-fg}finish signing in over there, then come back ♡{/gray-fg}{/center}"
     );
     screen.render();
 
@@ -104,7 +113,9 @@ export async function renderAuth(screen, navigate) {
       navigate("menu");
     } catch (err) {
       box.setContent(
-        `{red-fg}{bold}Auth Failed{/bold}{/red-fg}\n\n{red-fg}${err.message}{/red-fg}\n\n{gray-fg}Press any key to retry.{/gray-fg}`
+        `\n{center}{red-fg}{bold}hmm, sign-in didn't work{/bold}{/red-fg}{/center}\n\n` +
+          `{center}{red-fg}${err.message}{/red-fg}{/center}\n\n` +
+          `{center}{gray-fg}press any key to try again{/gray-fg}{/center}`
       );
       screen.render();
       screen.once("keypress", () => navigate("auth"));
