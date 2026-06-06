@@ -1,59 +1,42 @@
-# Flashcards
+# spaced repetition flashcards, but housed 🏡 in your terminal.
 
-A barebones terminal flashcard app: sign in with GitHub, create cards, delete
-cards, and review them with the SM-2 spaced-repetition algorithm. Built with
-[neo-blessed](https://github.com/embarklabs/neo-blessed) and
-[Supabase](https://supabase.com).
+study, learn and review from anywhere - especially your favourite text editor like vscode 😼
 
-## Setup
+## motive
 
-1. Install dependencies:
+**llm thinking time:** why scroll when you can flip?
 
-   ```sh
-   npm install
-   ```
+**reduce friction:** no resistance. take a break from working, building, coding & spend 2 minutes devoted to something you want to master.
 
-2. Create a Supabase project and run the schema in `supabase-schema.sql` (SQL
-   Editor → paste → run).
+**minimalist:** no need for gui - just some commands and our brains are growing 🔺
 
-3. In Supabase, enable the **GitHub** auth provider (Authentication → Providers).
-   Create a GitHub OAuth app with the callback URL pointing at your Supabase
-   project's `/auth/v1/callback`, and add `http://localhost:54321` to the
-   allowed redirect URLs (Authentication → URL Configuration).
 
-4. Copy `.env.example` to `.env` and fill in your project credentials:
+## easy login; everything saved in one place
 
-   ```sh
-   cp .env.example .env
-   ```
+- github oauth + supabase postgres db. secure !
 
-   ```
-   SUPABASE_URL=https://your-project.supabase.co
-   SUPABASE_ANON_KEY=your-anon-key-here
-   ```
+## run it 🏃‍♂️
 
-## Run
+too simple. clone repo -> nav into folder -> install dependencies -> start.
 
-```sh
+```bash
+git clone https://github.com/wrufay/cli_cards.git
+cd cli_cards
+npm install
 npm start
 ```
 
-The app opens GitHub in your browser for sign-in. Your session is cached in
-`~/.study-terminal/session.json`, so you stay logged in between runs.
+## stack to build ~
 
-## Controls
+runtime: node.js 20+
 
-- **Menu** — arrow keys + Enter.
-- **Create** — type the front, Enter, type the back, Enter to save. Esc cancels.
-- **My cards** — arrow keys to select, `d` or Enter to delete, Esc to go back.
-- **Review** — Space/Enter reveals the answer, then rate recall:
-  `1` Again · `2` Hard · `3` Good · `4` Easy. Esc returns to the menu.
+ui: [neo-blessed](https://github.com/embarklabs/neo-blessed)
 
-Ctrl-C quits from anywhere.
 
-## How scheduling works
+## algorithm
 
-Each card tracks SM-2 state (`repetitions`, `ease_factor`, `interval`,
-`next_review`). When you rate a card, `src/engine/sm2.js` computes the next
-interval and review date. The review screen only shows cards whose `next_review`
-is today or earlier.
+- we love all things spaced repetition. so we implemented it [here](sm2.js), from scratch.
+
+## lmk
+
+f26wu@uwaterloo[dot]ca
