@@ -13,15 +13,15 @@ export async function renderMenu(screen, navigate) {
     dueCount = (await dueCards()).length;
   } catch {}
 
+  // Entire login container
   const box = blessed.box({
     top: "center",
-    left: "center",
     width: "50%",
-    height: 14,
-    border: { type: "double" },
-    style: { border: { fg: "red" } },
+    height: 20,
+    border: { type: "line" },
+    style: { border: { fg: "cyan" } },
     tags: true,
-    label: " Flashcards ",
+    label: "☻ cli_cards.git",
   });
 
   const list = blessed.list({
@@ -38,16 +38,16 @@ export async function renderMenu(screen, navigate) {
       item: { fg: "white" },
     },
     items: [
-      `Review due cards  {gray-fg}(${dueCount} due){/gray-fg}`,
-      "Create a card",
-      "My cards",
-      "Log out",
-      "Quit",
+      `☼ start review  {gray-fg}(${dueCount} due){/gray-fg}`,
+      "✍︎ new card",
+      "☆ my decks, etc.",
+      "sign out",
+      "quit app",
     ],
   });
 
   box.setContent(
-    `{cyan-fg}{bold}Signed in as ${name}{/bold}{/cyan-fg}\n` +
+    `{cyan-fg}{bold}welcome back, ${name}.{/bold}{/cyan-fg}\n` +
       `{gray-fg}Use arrow keys + Enter. Ctrl-C to quit.{/gray-fg}`
   );
 
