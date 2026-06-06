@@ -8,7 +8,7 @@ study, learn and review from anywhere - especially your favourite text editor li
 
 **reduce friction:** no resistance. take a break from working, building, coding & spend 2 minutes devoted to something you want to master.
 
-**minimalist:** no need for gui - just some commands and our brains are growing 🔺
+**minimalist:** no gui, no mouse, no browser - just a keyboard-driven tui in your terminal & our brains are growing 🔺
 
 ## easy login; everything saved in one place
 
