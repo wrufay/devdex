@@ -15,7 +15,7 @@ export async function renderDeck(screen, navigate, { deck }) {
   });
 
   const hint =
-    "{gray-fg}n = new card  ·  r = review deck  ·  d = delete card  ·  Esc = back{/gray-fg}";
+    "{gray-fg}n = new  ·  e = edit  ·  r = review  ·  d = delete  ·  Esc = back{/gray-fg}";
   const status = blessed.text({
     parent: box,
     bottom: 1,
@@ -81,6 +81,10 @@ export async function renderDeck(screen, navigate, { deck }) {
 
   list.key(["escape"], () => navigate("decks"));
   list.key(["n"], () => navigate("create", { deck }));
+  list.key(["e"], () => {
+    const card = cards[list.selected];
+    if (card) navigate("create", { deck, card });
+  });
   list.key(["r"], () => navigate("review", { deck }));
   list.key(["d"], removeSelected);
 

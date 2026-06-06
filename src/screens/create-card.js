@@ -1,7 +1,8 @@
 import blessed from "neo-blessed";
-import { createCard } from "../db/queries.js";
+import { createCard, updateCard } from "../db/queries.js";
 
-export function renderCreate(screen, navigate, { deck }) {
+// Doubles as the create and edit form: pass a `card` to edit it, omit to create.
+export function renderCreate(screen, navigate, { deck, card }) {
   const back = () => navigate("deck", { deck });
 
   const box = blessed.box({
@@ -12,7 +13,7 @@ export function renderCreate(screen, navigate, { deck }) {
     border: { type: "line" },
     style: { border: { fg: "cyan" } },
     tags: true,
-    label: ` new card in ${deck.name} `,
+    label: card ? ` edit card in ${deck.name} ` : ` new card in ${deck.name} `,
   });
 
   blessed.text({ parent: box, top: 1, left: 2, content: "front:" });
@@ -50,6 +51,13 @@ export function renderCreate(screen, navigate, { deck }) {
 
   screen.append(box);
 
+  // Prefill must happen after append — setValue resolves width via the parent
+  // chain, which only exists once the box is attached to the screen.
+  if (card) {
+    frontInput.setValue(card.front);
+    backInput.setValue(card.back);
+  }
+
   async function save() {
     const front = frontInput.getValue().trim();
     const backText = backInput.getValue().trim();
@@ -62,7 +70,8 @@ export function renderCreate(screen, navigate, { deck }) {
     status.setContent("{gray-fg}saving...{/gray-fg}");
     screen.render();
     try {
-      await createCard(deck.id, front, backText);
+      if (card) await updateCard(card.id, front, backText);
+      else await createCard(deck.id, front, backText);
       back();
     } catch (err) {
       status.setContent(`{red-fg}${err.message}{/red-fg}`);

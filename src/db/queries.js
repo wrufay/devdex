@@ -75,6 +75,14 @@ export async function createCard(deckId, front, back) {
   if (error) throw error;
 }
 
+export async function updateCard(id, front, back) {
+  const { error } = await supabase
+    .from("cards")
+    .update({ front, back })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 export async function deleteCard(id) {
   const { error } = await supabase.from("cards").delete().eq("id", id);
   if (error) throw error;

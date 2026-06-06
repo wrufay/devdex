@@ -101,7 +101,7 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
 
   async function rate(quality) {
     const card = cards[index];
-    footer.setContent("{gray-fg}Saving...{/gray-fg}");
+    footer.setContent("{gray-fg}saving...{/gray-fg}");
     screen.render();
     try {
       await applyReview(card.id, schedule(card, quality));
