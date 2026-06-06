@@ -1,45 +1,41 @@
-/**
- * SM-2 Spaced Repetition Algorithm
- * Based on Piotr Wozniak's SuperMemo 2 algorithm.
- *
- * Quality ratings:
- *   0 - Complete blackout
- *   1 - Incorrect, but recognized answer
- *   2 - Incorrect, but easy to recall once shown
- *   3 - Correct with serious difficulty
- *   4 - Correct with some hesitation
- *   5 - Perfect recall
- */
-export function sm2(quality, repetitions, easeFactor, interval) {
-  let newEF = easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-  if (newEF < 1.3) newEF = 1.3;
+// SM-2 spaced repetition algorithm.
+// Given a card's current state and a review quality (0-5), returns the new
+// scheduling state: { repetitions, easeFactor, interval, nextReview }.
+//
+// Quality scale (what we expose in the UI):
+//   0 = Again (forgot)   -> resets the card
+//   3 = Hard
+//   4 = Good
+//   5 = Easy
 
-  let newInterval;
-  let newReps;
+const MIN_EASE = 1.3;
 
-  if (quality >= 3) {
-    if (repetitions === 0) {
-      newInterval = 1;
-    } else if (repetitions === 1) {
-      newInterval = 6;
-    } else {
-      newInterval = Math.round(interval * newEF);
-    }
-    newReps = repetitions + 1;
+export function schedule(card, quality) {
+  let { repetitions, ease_factor: easeFactor, interval } = card;
+
+  if (quality < 3) {
+    // Failed recall: reset repetitions, review again tomorrow.
+    repetitions = 0;
+    interval = 1;
   } else {
-    newReps = 0;
-    newInterval = 1;
-    newEF = easeFactor;
+    if (repetitions === 0) {
+      interval = 1;
+    } else if (repetitions === 1) {
+      interval = 6;
+    } else {
+      interval = Math.round(interval * easeFactor);
+    }
+    repetitions += 1;
   }
 
-  const nextReview = new Date();
-  nextReview.setDate(nextReview.getDate() + newInterval);
-  const nextReviewStr = nextReview.toISOString().split('T')[0];
+  // Adjust ease factor based on quality (clamped to a sane minimum).
+  easeFactor =
+    easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+  if (easeFactor < MIN_EASE) easeFactor = MIN_EASE;
 
-  return {
-    repetitions: newReps,
-    easeFactor: Math.round(newEF * 100) / 100,
-    interval: newInterval,
-    nextReview: nextReviewStr,
-  };
+  const next = new Date();
+  next.setDate(next.getDate() + interval);
+  const nextReview = next.toISOString().slice(0, 10); // YYYY-MM-DD
+
+  return { repetitions, easeFactor, interval, nextReview };
 }

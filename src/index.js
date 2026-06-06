@@ -1,18 +1,27 @@
 #!/usr/bin/env node
-import 'dotenv/config';
-import React from 'react';
-import { render } from 'ink';
-import { initSchema } from './db/schema.js';
-import { closeDb } from './db/connection.js';
-import App from './app.js';
+import blessed from "neo-blessed";
+import { createNavigate } from "./app.js";
 
-// Initialize database
-initSchema();
+export const screen = blessed.screen({
+  smartCSR: true,
+  title: "Flashcards",
+  fullUnicode: false,
+});
 
-// Render the app
-const { waitUntilExit } = render(React.createElement(App));
-
-waitUntilExit().then(() => {
-  closeDb();
+screen.key(["C-c"], () => {
+  screen.destroy();
   process.exit(0);
 });
+
+screen.on("resize", () => screen.render());
+
+process.on("uncaughtException", (err) => {
+  try {
+    screen.destroy();
+  } catch (_) {}
+  process.stderr.write(`\nuncaughtException: ${err.stack || err}\n`);
+  process.exit(1);
+});
+
+const navigate = createNavigate(screen);
+navigate("auth");

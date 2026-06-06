@@ -1,38 +1,40 @@
-# CLI Anki for Any Subject
+# spaced repetition flashcards, but housed 🏡 in your terminal.
 
-## Setup instructions
+study, learn and review from anywhere - especially your favourite text editor like vscode 😼
 
-1. Clone this repo
+## motive
+
+**llm thinking time:** why scroll when you can flip?
+
+**reduce friction:** no resistance. take a break from working, building, coding & spend 2 minutes devoted to something you want to master.
+
+**minimalist:** no need for gui - just some commands and our brains are growing 🔺
+
+## easy login; everything saved in one place
+
+- github oauth + supabase postgres db. secure !
+
+## run it 🏃‍♂️
+
+too simple. clone repo -> nav into folder -> install dependencies -> start.
+
 ```bash
-git clone https://github.com/wrufay/cli_136.git
-```
-
-2. Make `.env` file following `.env.example`:
-```
-ANTHROPIC_API_KEY=your-key-here
-```
-(Get your api key from https://console.anthropic.com)
-
-3. Navigate to the cli_136 repository
-```bash
-cd cli_136
-```
-
-4. Install dependencies
-```bash
+git clone https://github.com/wrufay/cli_cards.git
+cd cli_cards
 npm install
-```
-
-5. Start the application
-```bash
 npm start
 ```
 
-### ENJOY ! 🩶
+## stack to build ~
 
-## TODO / Roadmap
+runtime: node.js 20+
 
-- [ ] Custom AI instructions when importing PDFs (e.g., "focus on definitions", "include more code examples")
-- [ ] Edit existing flashcards
-- [ ] Add personal notes to flashcards (mnemonic devices, additional context)
-- [ ] Type-in answer mode (practice articulating answers before revealing)
+ui: [neo-blessed](https://github.com/embarklabs/neo-blessed)
+
+## algorithm
+
+- we love all things spaced repetition. so we implemented it here from scratch.
+
+## lmk
+
+f26wu@uwaterloo[dot]ca
