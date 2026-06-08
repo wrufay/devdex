@@ -16,15 +16,15 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
   const box = blessed.box({
     top: "center",
     left: "center",
-    width: "70%",
-    height: "60%",
+    width: "90%",
+    height: "90%",
     border: { type: "line" },
     style: { border: { fg: "cyan" } },
     tags: true,
     label: ` reviewing ${scopeName} `,
   });
 
-  const content = blessed.text({
+  const content = blessed.scrollablebox({
     parent: box,
     top: 2,
     left: 2,
@@ -32,7 +32,12 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
     bottom: 3,
     tags: true,
     align: "center",
-    valign: "middle",
+    scrollable: true,
+    alwaysScroll: true,
+    scrollbar: { ch: " ", style: { bg: "cyan" } },
+    keys: true,
+    mouse: true,
+    wrap: true,
   });
 
   const footer = blessed.text({
