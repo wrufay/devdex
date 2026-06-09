@@ -11,7 +11,7 @@ const RATINGS = [
 ];
 
 export async function renderReview(screen, navigate, { deck, all } = {}) {
-  const scopeName = all ? "all decks" : deck ? deck.name : "review";
+  const scopeName = all ? "All decks" : deck ? deck.name : "Review";
 
   const box = blessed.box({
     top: "center",
@@ -69,7 +69,7 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
 
   if (cards.length === 0) {
     content.setContent(
-      "{green-fg}{bold}all caught up.{/bold}{/green-fg}\n\nno cards are due for review."
+      "{green-fg}{bold}All caught up!{/bold}{/green-fg}\n\nNo cards are due for review."
     );
     footer.setContent("{gray-fg}Esc = back to menu{/gray-fg}");
     content.key(["escape"], () => navigate("menu"));
@@ -122,7 +122,7 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
     index += 1;
     if (index >= cards.length) {
       content.setContent(
-        "{green-fg}{bold}session complete.{/bold}{/green-fg}\n\nyou reviewed every due card."
+        "{green-fg}{bold}Session complete.{/bold}{/green-fg}\n\nYou reviewed every due card."
       );
       footer.setContent("{gray-fg}Esc = back to menu{/gray-fg}");
       screen.render();
