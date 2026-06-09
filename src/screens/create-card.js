@@ -1,5 +1,6 @@
 import blessed from "neo-blessed";
 import { createCard, updateCard } from "../db/queries.js";
+import { capHeight } from "../lib/responsive.js";
 
 // Doubles as the create and edit form: pass a `card` to edit it, omit to create.
 export function renderCreate(screen, navigate, { deck, card }) {
@@ -50,6 +51,7 @@ export function renderCreate(screen, navigate, { deck, card }) {
   });
 
   screen.append(box);
+  capHeight(screen, box, 16); // up to 16 rows, but shrinks on short terminals
 
   // Prefill must happen after append — setValue resolves width via the parent
   // chain, which only exists once the box is attached to the screen.

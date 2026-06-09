@@ -1,6 +1,7 @@
 import blessed from "neo-blessed";
 import { supabase } from "../db/connection.js";
 import { dueCards } from "../db/queries.js";
+import { capHeight } from "../lib/responsive.js";
 
 export async function renderMenu(screen, navigate) {
   const {
@@ -39,9 +40,9 @@ export async function renderMenu(screen, navigate) {
       item: { fg: "white" },
     },
     items: [
-      `review due cards  {gray-fg}(${dueCount} due){/gray-fg}`,
-      "new card",
-      "my decks",
+      `Review {gray-fg}(${dueCount} due){/gray-fg}`,
+      "New card",
+      "My decks",
       "SIGN OUT",
       "QUIT",
     ],
@@ -49,10 +50,11 @@ export async function renderMenu(screen, navigate) {
 
   box.setContent(
     `{cyan-fg}{bold}welcome back, ${name}{/bold}{/cyan-fg}\n` +
-      `{gray-fg}arrow keys + Enter to select · Ctrl-C to quit{/gray-fg}`
+      `{gray-fg}Arrow keys + Enter to select · Ctrl-C to quit{/gray-fg}`
   );
 
   screen.append(box);
+  capHeight(screen, box, 20); // up to 20 rows, but shrinks on short terminals
   list.focus();
 
   list.on("select", async (_item, index) => {

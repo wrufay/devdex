@@ -1,4 +1,4 @@
-# _devDex_ 𓏵‧₊˚ ┊ flashcards tui, made for devs
+# _devDex_ 𓏵‧₊˚ ┊ flashcards tui, for devs
 
 ### hey dev... how's it been?
 
@@ -14,7 +14,7 @@ no no, not your code, work, or side projects. how have YOU been.
 
 ### i get you with the grind but... there's more to life than that llm 😭
 
-## and certainly more to the terminal than meets the command line.
+## and more to the terminal than meets the command line.
 
 with **_devDex_**, review + learn + memorize all without leaving your favourite text editor.
 
