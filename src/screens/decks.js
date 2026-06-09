@@ -1,5 +1,5 @@
 import blessed from "neo-blessed";
-import { listDecks, createDeck, deleteDeck } from "../db/queries.js";
+import { listDecks, createDeck, updateDeck, deleteDeck } from "../db/queries.js";
 
 // The decks screen has three modes, set via the `pick` prop:
 //   undefined  -> manage: Enter opens a deck, d deletes a deck
@@ -26,7 +26,7 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
 
   const hint = pick
     ? "{gray-fg}Enter = choose  ·  n = new deck  ·  Esc = back{/gray-fg}"
-    : "{gray-fg}Enter = open  ·  n = new deck  ·  d = delete  ·  Esc = back{/gray-fg}";
+    : "{gray-fg}Enter = open  ·  n = new deck  ·  e = rename  ·  d = delete  ·  Esc = back{/gray-fg}";
   const status = blessed.text({
     parent: box,
     bottom: 1,
@@ -126,6 +126,42 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
     });
   }
 
+  function renameDeck(deck) {
+    const input = blessed.textbox({
+      parent: box,
+      bottom: 3,
+      left: 2,
+      right: 2,
+      height: 3,
+      border: { type: "line" },
+      style: { border: { fg: "cyan" } },
+      label: " rename deck ",
+      inputOnFocus: true,
+    });
+    input.setValue(deck.name);
+    screen.render();
+    input.focus();
+
+    const close = () => {
+      box.remove(input);
+      list.focus();
+      screen.render();
+    };
+    input.key(["escape"], close);
+    input.on("submit", async () => {
+      const name = input.getValue().trim();
+      close();
+      if (!name || name === deck.name) return;
+      try {
+        await updateDeck(deck.id, name);
+        await refresh();
+      } catch (err) {
+        status.setContent(`{red-fg}${err.message}{/red-fg}`);
+        screen.render();
+      }
+    });
+  }
+
   list.on("select", (_item, index) => {
     if (showAll && index === 0) {
       navigate("review", { all: true });
@@ -141,6 +177,13 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
   list.key(["n"], newDeck);
 
   if (!pick) {
+    list.key(["e"], () => {
+      const deck = deckAt(list.selected);
+      if (!deck) return;
+      armedId = null; // cancel any pending delete
+      renameDeck(deck);
+    });
+
     list.key(["d"], async () => {
       const deck = deckAt(list.selected);
       if (!deck) return;

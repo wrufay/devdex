@@ -49,6 +49,11 @@ export async function createDeck(name) {
   return data;
 }
 
+export async function updateDeck(id, name) {
+  const { error } = await supabase.from("decks").update({ name }).eq("id", id);
+  if (error) throw error;
+}
+
 export async function deleteDeck(id) {
   // Cards are removed automatically via ON DELETE CASCADE.
   const { error } = await supabase.from("decks").delete().eq("id", id);
