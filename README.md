@@ -1,4 +1,4 @@
-# _devDex_ 𓏵‧₊
+# _devDex_ 𓏵‧₊˚ ┊ flashcards in your terminal
 
 ### hey dev... how's it been?
 
@@ -20,7 +20,7 @@ with **_devDex_**, review + learn + memorize all without leaving your favourite 
 
 powered by spaced repetition, it's like Anki - but integrated seamlessly into your everyday workflow. building up here 🧠 and down here 💻 in parallel.
 
-## flashcard features
+## ꕤ features
 
 - **cards and decks** - traditional front and back. create, review, update, delete; full CRUD, Deck's Version
 
@@ -30,7 +30,7 @@ powered by spaced repetition, it's like Anki - but integrated seamlessly into yo
 
 - **saved to the cloud** - log in with GitHub. your cards are for you, and with you - wherever you go.
 
-## motive
+## ꕤ motive
 
 **llm thinking time:** why scroll when you can flip?
 
@@ -38,14 +38,14 @@ powered by spaced repetition, it's like Anki - but integrated seamlessly into yo
 
 **minimalist:** no gui, no popup window, no browser. a text-based user interface is enough to get those gears turning and that streak burning
 
-## built with:
+## ꕤ built with:
 
-- **node.js** runtime
+- **Node.js** runtime
 - **[neo-blessed](https://github.com/embarklabs/neo-blessed)** ui
-- **[supabase](https://supabase.com) - github oauth + postgres** auth and db
+- **[Supabase](https://supabase.com) - GitHub OAuth + Postgres** auth and db
 - **SM-2, hand-rolled** spaced repetition algorithm
 
-## under the hood, explained
+## ꕤ what's under the hood, explained
 
 **SM-2 algo**
 every card carries four numbers: `repetitions`, `ease_factor` (starts at 2.5), `interval`, and `next_review`. when you rate a card:
@@ -55,21 +55,21 @@ every card carries four numbers: `repetitions`, `ease_factor` (starts at 2.5), `
 
 so the harder a card is for you, the more often it comes back; the easier it is, the longer it rests.
 
-**github oauth**
-devdex spins up a mini local http server on `localhost:54321`, opens github in your browser, catches the redirect, and trades the code for a session (PKCE flow via supabase). the session is cached to `~/.study-terminal/` so you stay logged in between runs.
+**GitHub OAuth**
+devDex spins up a mini local http server on `localhost:54321`, opens GitHub in your browser, catches the redirect, and trades the code for a session (PKCE flow via Supabase). the session is cached to `~/.study-terminal/` so you stay logged in between runs.
 
-**supabase postgres.**
+**Supabase Postgres.**
 two tables (`decks`, `cards`) with row-level security, so you only ever see your own stuff. each card's scheduling state lives right on its row, so "what should i study today?" is just a query for what's due.
 
 **neo-blessed.**
 the whole thing is a TUI: centered panels, cyan borders, arrow-key lists, fully keyboard-driven. handles terminal resize, runs anywhere a terminal does.
 
-## controls ⌨️
+## ꕤ nav tips
 
 | where               | keys                                                                              |
 | ------------------- | --------------------------------------------------------------------------------- |
 | **everywhere**      | arrow keys + `enter` to navigate · `ctrl-c` to quit                               |
-| **decks**           | `enter` open · `n` new deck · `d` delete (twice to confirm) · `esc` back          |
+| **decks**           | `enter` open · `n` new deck · `e` rename · `d` delete (twice to confirm) · `esc` back |
 | **inside a deck**   | `n` new card · `e` edit · `r` review · `d` delete card · `esc` back               |
 | **new / edit card** | type the front, `enter`, type the back, `enter` to save · `esc` cancels           |
 | **review**          | `space` / `enter` to flip · then rate: `1` again · `2` hard · `3` good · `4` easy |
@@ -85,7 +85,7 @@ npm install
 npm start
 ```
 
-first run opens github to sign in. once you approve it, come back to your terminal & you're ready to go!
+first run opens GitHub to sign in. once you approve it, come back to your terminal & you're ready to go!
 
 ## lmk ˙ᵕ˙
 
