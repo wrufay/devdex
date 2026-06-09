@@ -79,7 +79,8 @@ export async function renderAuth(screen, navigate) {
 
   const idleContent =
     "\n{center}{cyan-fg}{bold}welcome to devDex 𓏵‧₊˚ ┊{/bold}{/cyan-fg}{/center}\n\n" +
-    "{center}spaced repetition flashcards, in your terminal{/center}\n\n" +
+    "{center}spaced repetition flashcards as a text-based ui just for you, dev{/center}\n\n" +
+    "{center}learn + memorize + study without leaving the comfort of your terminal ⌞ ⌝{/center}\n\n" +
     "{center}{gray-fg}press Enter to sign in with GitHub{/gray-fg}{/center}";
 
   const box = blessed.box({

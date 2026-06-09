@@ -85,6 +85,13 @@ npm install
 npm start
 ```
 
+want to type `devdex` from anywhere instead of `npm start`? link it once:
+
+```bash
+npm link
+devdex
+```
+
 first run opens GitHub to sign in. once you approve it, come back to your terminal & you're ready to go!
 
 ## something to ask, suggest or contribute?

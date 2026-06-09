@@ -22,27 +22,27 @@ export async function renderMenu(screen, navigate) {
     border: { type: "line" },
     style: { border: { fg: "cyan" } },
     tags: true,
-    label: " devdex.git ",
+    label: " devDex.git ‧₊˚ ",
   });
 
   // Menu rows. `null` = a blank spacer. Each real row is { label, run }.
   const rows = [
     {
-      label: `review now {gray-fg}(${dueCount} due){/gray-fg}`,
+      label: `Review now {gray-fg}(${dueCount} due){/gray-fg}`,
       run: () => navigate("decks", { pick: "review" }),
     },
-    { label: "new card", run: () => navigate("decks", { pick: "create" }) },
-    { label: "my decks", run: () => navigate("decks") },
+    { label: "New card", run: () => navigate("decks", { pick: "create" }) },
+    { label: "My decks", run: () => navigate("decks") },
     null,
     {
-      label: "SIGN OUT",
+      label: "Sign out",
       run: async () => {
         await supabase.auth.signOut();
         navigate("auth");
       },
     },
     {
-      label: "QUIT",
+      label: "QUIT app",
       run: () => {
         screen.destroy();
         process.exit(0);

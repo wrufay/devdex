@@ -1,5 +1,6 @@
 import blessed from "neo-blessed";
 import { listCards, deleteCard } from "../db/queries.js";
+import { attachMarker } from "../lib/marker.js";
 
 // A single deck's cards. Reached from the decks manager.
 export async function renderDeck(screen, navigate, { deck }) {
@@ -41,6 +42,7 @@ export async function renderDeck(screen, navigate, { deck }) {
   });
 
   screen.append(box);
+  const marker = attachMarker(screen, list);
 
   let cards = [];
 
@@ -52,15 +54,13 @@ export async function renderDeck(screen, navigate, { deck }) {
       screen.render();
       return;
     }
-    if (cards.length === 0) {
-      list.setItems(["{gray-fg}no cards yet. press n to add one.{/gray-fg}"]);
-    } else {
-      list.setItems(
-        cards.map((c) => `{bold}${c.front}{/bold}  {gray-fg}→ ${c.back}{/gray-fg}`)
-      );
-    }
-    list.select(0);
-    screen.render();
+    const labels =
+      cards.length === 0
+        ? ["{gray-fg}no cards yet. press n to add one.{/gray-fg}"]
+        : cards.map(
+            (c) => `{bold}${c.front}{/bold}  {gray-fg}→ ${c.back}{/gray-fg}`
+          );
+    marker.setItems(labels);
   }
 
   async function removeSelected() {

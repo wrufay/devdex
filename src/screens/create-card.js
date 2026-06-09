@@ -14,7 +14,7 @@ export function renderCreate(screen, navigate, { deck, card }) {
     border: { type: "line" },
     style: { border: { fg: "cyan" } },
     tags: true,
-    label: card ? ` edit card in ${deck.name} ` : ` new card in ${deck.name} `,
+    label: card ? ` Edit card in ${deck.name} ` : ` New card in ${deck.name} `,
   });
 
   blessed.text({ parent: box, top: 1, left: 2, content: "front:" });

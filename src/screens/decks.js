@@ -1,5 +1,6 @@
 import blessed from "neo-blessed";
 import { listDecks, createDeck, updateDeck, deleteDeck } from "../db/queries.js";
+import { attachMarker } from "../lib/marker.js";
 
 // The decks screen has three modes, set via the `pick` prop:
 //   undefined  -> manage: Enter opens a deck, d deletes a deck
@@ -8,10 +9,10 @@ import { listDecks, createDeck, updateDeck, deleteDeck } from "../db/queries.js"
 export async function renderDecks(screen, navigate, { pick } = {}) {
   const title =
     pick === "review"
-      ? "pick a deck to review"
+      ? "Pick a deck to review"
       : pick === "create"
-        ? "pick a deck for your new card"
-        : "my decks";
+        ? "Pick a deck for your new card"
+        : "My decks";
 
   const box = blessed.box({
     top: "center",
@@ -52,6 +53,7 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
   });
 
   screen.append(box);
+  const marker = attachMarker(screen, list);
 
   const showAll = pick === "review"; // prepend an "all decks" row in review mode
   let decks = [];
@@ -80,9 +82,7 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
         );
       }
     }
-    list.setItems(items);
-    list.select(0);
-    screen.render();
+    marker.setItems(items);
   }
 
   // Map a list row index back to a deck (accounting for the "all decks" row).
