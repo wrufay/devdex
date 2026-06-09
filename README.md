@@ -20,6 +20,14 @@ with **_devDex_**, review + learn + memorize all without leaving your favourite 
 
 powered by spaced repetition, it's like Anki - but integrated seamlessly into your everyday workflow. building up here 🧠 and down here 💻 in parallel.
 
+## ಄ motive
+
+**llm thinking time:** why scroll when you can flip?
+
+**reduce friction:** no resistance. take a break from building, coding & spend 2 minutes on something you wanna master.
+
+**minimalist:** no gui, no popup window, no browser. a text-based user interface is enough to get those gears turning and that streak burning
+
 ## ꕤ features
 
 - **cards and decks** - traditional front and back. create, review, update, delete; full CRUD, Deck's Version
@@ -29,14 +37,6 @@ powered by spaced repetition, it's like Anki - but integrated seamlessly into yo
 - **review sessions** - pick a deck, go through what's due, respond with how well you knew it.
 
 - **saved to the cloud** - log in with GitHub. your cards are for you, and with you - wherever you go.
-
-## ꕤ motive
-
-**llm thinking time:** why scroll when you can flip?
-
-**reduce friction:** no resistance. take a break from building, coding & spend 2 minutes on something you wanna master.
-
-**minimalist:** no gui, no popup window, no browser. a text-based user interface is enough to get those gears turning and that streak burning
 
 ## ꕤ built with:
 
@@ -64,15 +64,15 @@ two tables (`decks`, `cards`) with row-level security, so you only ever see your
 **neo-blessed.**
 the whole thing is a TUI: centered panels, cyan borders, arrow-key lists, fully keyboard-driven. handles terminal resize, runs anywhere a terminal does.
 
-## ꕤ nav tips
+## ಄ nav tips
 
-| where               | keys                                                                              |
-| ------------------- | --------------------------------------------------------------------------------- |
-| **everywhere**      | arrow keys + `enter` to navigate · `ctrl-c` to quit                               |
+| where               | keys                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------- |
+| **everywhere**      | arrow keys + `enter` to navigate · `ctrl-c` to quit                                   |
 | **decks**           | `enter` open · `n` new deck · `e` rename · `d` delete (twice to confirm) · `esc` back |
-| **inside a deck**   | `n` new card · `e` edit · `r` review · `d` delete card · `esc` back               |
-| **new / edit card** | type the front, `enter`, type the back, `enter` to save · `esc` cancels           |
-| **review**          | `space` / `enter` to flip · then rate: `1` again · `2` hard · `3` good · `4` easy |
+| **inside a deck**   | `n` new card · `e` edit · `r` review · `d` delete card · `esc` back                   |
+| **new / edit card** | type the front, `enter`, type the back, `enter` to save · `esc` cancels               |
+| **review**          | `space` / `enter` to flip · then rate: `1` again · `2` hard · `3` good · `4` easy     |
 
 ## run it 🏃‍♂️
 
@@ -87,6 +87,6 @@ npm start
 
 first run opens GitHub to sign in. once you approve it, come back to your terminal & you're ready to go!
 
-## lmk ˙ᵕ˙
+## something to ask, suggest or contribute?
 
-f26wu@uwaterloo[dot]ca
+**lmk, i'm all ears ˙ᵕ˙** f26wu@uwaterloo[dot]ca
