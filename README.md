@@ -14,11 +14,15 @@ no no, not your code, work, or side projects. how have YOU been.
 
 ### i get you with the grind but... there's more to life than that llm 😭
 
+<br>
+
 ## and more to the terminal than meets the command line.
 
 with **_devDex_**, review + learn + memorize all without leaving your favourite text editor.
 
 powered by spaced repetition, it's like Anki - but integrated seamlessly into your everyday workflow. building up here 🧠 and down here 💻 in parallel.
+
+<br>
 
 ## ➜ the motive behind the meta
 
@@ -27,6 +31,8 @@ powered by spaced repetition, it's like Anki - but integrated seamlessly into yo
 **reduce friction:** no resistance. take a break from building, coding & spend 2 minutes on something you wanna master.
 
 **minimalist:** no gui, no popup window, no browser. a text-based user interface is enough to get those gears turning and that streak burning
+
+<br>
 
 ## ꕤ features
 
@@ -38,12 +44,16 @@ powered by spaced repetition, it's like Anki - but integrated seamlessly into yo
 
 - **saved to the cloud** - log in with GitHub. your cards are for you, and with you - wherever you go.
 
+<br>
+
 ## ꕤ built with:
 
 - **Node.js** runtime
 - **[neo-blessed](https://github.com/embarklabs/neo-blessed)** ui
 - **[Supabase](https://supabase.com) - GitHub OAuth + Postgres** auth and db
 - **SM-2, hand-rolled** spaced repetition algorithm
+
+<br>
 
 ## ꕤ under the hood, explained
 
@@ -62,7 +72,9 @@ devDex spins up a mini local http server on `localhost:54321`, opens GitHub in y
 two tables (`decks`, `cards`) with row-level security, so you only ever see your own stuff. each card's scheduling state lives right on its row, so "what should i study today?" is just a query for what's due.
 
 **neo-blessed.**
-the whole thing is a TUI: centered panels, cyan borders, arrow-key lists, fully keyboard-driven. handles terminal resize, runs anywhere a terminal does.
+the whole thing is a TUI: centered panels, sky-blue borders, arrow-key lists, fully keyboard-driven. handles terminal resize, runs anywhere a terminal does.
+
+<br>
 
 ## ⌞ ⌝ nav tips
 
@@ -73,6 +85,8 @@ the whole thing is a TUI: centered panels, cyan borders, arrow-key lists, fully 
 | **inside a deck**   | `n` new card · `e` edit · `r` review · `d` delete card · `esc` back                   |
 | **new / edit card** | type the front, `enter`, type the back, `enter` to save · `esc` cancels               |
 | **review**          | `space` / `enter` to flip · then rate: `1` again · `2` hard · `3` good · `4` easy     |
+
+<br>
 
 ## run it 🏃‍♂️
 
@@ -93,6 +107,8 @@ devdex
 ```
 
 first run opens GitHub to sign in. once you approve it, come back to your terminal & you're ready to go!
+
+<br>
 
 ## something to ask, suggest or contribute?
 

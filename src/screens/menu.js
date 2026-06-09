@@ -20,9 +20,9 @@ export async function renderMenu(screen, navigate) {
     width: "50%",
     height: 20,
     border: { type: "line" },
-    style: { border: { fg: "cyan" } },
+    style: { border: { fg: "#3DA5D9" } },
     tags: true,
-    label: " devDex.git ‧₊˚ ",
+    label: " devDex.git ",
   });
 
   // Menu rows. `null` = a blank spacer. Each real row is { label, run }.
@@ -42,7 +42,7 @@ export async function renderMenu(screen, navigate) {
       },
     },
     {
-      label: "QUIT app",
+      label: "QUIT",
       run: () => {
         screen.destroy();
         process.exit(0);
@@ -62,7 +62,7 @@ export async function renderMenu(screen, navigate) {
     keys: false, // we drive nav so the marker follows the cursor + hops the spacer
     tags: true,
     style: {
-      selected: { bg: "blue", fg: "white" },
+      selected: { bg: "#2364AA", fg: "white" },
       item: { fg: "white" },
     },
   });
@@ -91,7 +91,7 @@ export async function renderMenu(screen, navigate) {
   }
 
   box.setContent(
-    `{cyan-fg}{bold}welcome back, ${name}{/bold}{/cyan-fg}\n` +
+    `{#3DA5D9-fg}{bold}welcome back, ${name}{/bold}{/#3DA5D9-fg}\n` +
       `{gray-fg}arrow keys + Enter to select · Ctrl-C to quit{/gray-fg}`
   );
 

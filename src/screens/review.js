@@ -4,10 +4,10 @@ import { schedule } from "../engine/sm2.js";
 
 // Rating keys mapped to SM-2 quality scores.
 const RATINGS = [
-  { key: "1", label: "again", quality: 0, color: "red" },
-  { key: "2", label: "hard", quality: 3, color: "yellow" },
-  { key: "3", label: "good", quality: 4, color: "green" },
-  { key: "4", label: "easy", quality: 5, color: "cyan" },
+  { key: "1", label: "again", quality: 0, color: "#EA7317" },
+  { key: "2", label: "hard", quality: 3, color: "#FEC601" },
+  { key: "3", label: "good", quality: 4, color: "#73BFB8" },
+  { key: "4", label: "easy", quality: 5, color: "#3DA5D9" },
 ];
 
 export async function renderReview(screen, navigate, { deck, all } = {}) {
@@ -19,7 +19,7 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
     width: "90%",
     height: "90%",
     border: { type: "line" },
-    style: { border: { fg: "cyan" } },
+    style: { border: { fg: "#3DA5D9" } },
     tags: true,
     label: ` reviewing ${scopeName} `,
   });
@@ -34,7 +34,7 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
     align: "center",
     scrollable: true,
     alwaysScroll: true,
-    scrollbar: { ch: " ", style: { bg: "cyan" } },
+    scrollbar: { ch: " ", style: { bg: "#3DA5D9" } },
     keys: true,
     mouse: true,
     wrap: true,
@@ -98,7 +98,7 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
     const card = cards[index];
     content.setContent(
       `{gray-fg}card ${index + 1} of ${cards.length}{/gray-fg}\n\n` +
-        `{bold}${card.front}{/bold}\n\n{cyan-fg}${card.back}{/cyan-fg}`
+        `{bold}${card.front}{/bold}\n\n{#3DA5D9-fg}${card.back}{/#3DA5D9-fg}`
     );
     footer.setContent(
       RATINGS.map(

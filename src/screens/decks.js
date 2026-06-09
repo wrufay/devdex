@@ -20,7 +20,7 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
     width: "70%",
     height: "80%",
     border: { type: "line" },
-    style: { border: { fg: "cyan" } },
+    style: { border: { fg: "#3DA5D9" } },
     tags: true,
     label: ` ${title} `,
   });
@@ -47,7 +47,7 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
     vi: true,
     tags: true,
     style: {
-      selected: { bg: "blue", fg: "white" },
+      selected: { bg: "#2364AA", fg: "white" },
       item: { fg: "white" },
     },
   });
@@ -71,7 +71,7 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
     const items = [];
     if (showAll) {
       const totalDue = decks.reduce((n, d) => n + d.due, 0);
-      items.push(`{cyan-fg}all decks{/cyan-fg}  {gray-fg}(${totalDue} due){/gray-fg}`);
+      items.push(`{#3DA5D9-fg}all decks{/#3DA5D9-fg}  {gray-fg}(${totalDue} due){/gray-fg}`);
     }
     if (decks.length === 0 && !showAll) {
       items.push("{gray-fg}no decks yet. press n to create one.{/gray-fg}");
@@ -99,7 +99,7 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
       right: 2,
       height: 3,
       border: { type: "line" },
-      style: { border: { fg: "cyan" } },
+      style: { border: { fg: "#3DA5D9" } },
       label: " new deck name ",
       inputOnFocus: true,
     });
@@ -134,7 +134,7 @@ export async function renderDecks(screen, navigate, { pick } = {}) {
       right: 2,
       height: 3,
       border: { type: "line" },
-      style: { border: { fg: "cyan" } },
+      style: { border: { fg: "#3DA5D9" } },
       label: " rename deck ",
       inputOnFocus: true,
     });

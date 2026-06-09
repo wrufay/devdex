@@ -10,7 +10,7 @@ export async function renderDeck(screen, navigate, { deck }) {
     width: "70%",
     height: "80%",
     border: { type: "line" },
-    style: { border: { fg: "cyan" } },
+    style: { border: { fg: "#3DA5D9" } },
     tags: true,
     label: ` ${deck.name} `,
   });
@@ -36,7 +36,7 @@ export async function renderDeck(screen, navigate, { deck }) {
     vi: true,
     tags: true,
     style: {
-      selected: { bg: "blue", fg: "white" },
+      selected: { bg: "#2364AA", fg: "white" },
       item: { fg: "white" },
     },
   });

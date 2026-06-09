@@ -12,7 +12,7 @@ export function renderCreate(screen, navigate, { deck, card }) {
     width: "60%",
     height: 16,
     border: { type: "line" },
-    style: { border: { fg: "cyan" } },
+    style: { border: { fg: "#3DA5D9" } },
     tags: true,
     label: card ? ` Edit card in ${deck.name} ` : ` New card in ${deck.name} `,
   });
@@ -26,7 +26,7 @@ export function renderCreate(screen, navigate, { deck, card }) {
     height: 3,
     border: { type: "line" },
     inputOnFocus: true,
-    style: { border: { fg: "gray" }, focus: { border: { fg: "cyan" } } },
+    style: { border: { fg: "gray" }, focus: { border: { fg: "#3DA5D9" } } },
   });
 
   blessed.text({ parent: box, top: 6, left: 2, content: "back:" });
@@ -38,7 +38,7 @@ export function renderCreate(screen, navigate, { deck, card }) {
     height: 3,
     border: { type: "line" },
     inputOnFocus: true,
-    style: { border: { fg: "gray" }, focus: { border: { fg: "cyan" } } },
+    style: { border: { fg: "gray" }, focus: { border: { fg: "#3DA5D9" } } },
   });
 
   const status = blessed.text({

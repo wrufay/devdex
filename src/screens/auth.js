@@ -78,7 +78,7 @@ export async function renderAuth(screen, navigate) {
   }
 
   const idleContent =
-    "\n{center}{cyan-fg}{bold}welcome to devDex 𓏵‧₊˚ ┊{/bold}{/cyan-fg}{/center}\n\n" +
+    "\n{center}{#3DA5D9-fg}{bold}welcome to devDex 𓏵‧₊˚ ┊{/bold}{/#3DA5D9-fg}{/center}\n\n" +
     "{center}spaced repetition flashcards as a text-based ui just for you, dev{/center}\n\n" +
     "{center}learn + memorize + study without leaving the comfort of your terminal ⌞ ⌝{/center}\n\n" +
     "{center}{gray-fg}press Enter to sign in with GitHub{/gray-fg}{/center}";
@@ -89,7 +89,7 @@ export async function renderAuth(screen, navigate) {
     width: "60%",
     height: 14,
     border: { type: "line" },
-    style: { border: { fg: "cyan" } },
+    style: { border: { fg: "#3DA5D9" } },
     tags: true,
     keys: true,
     content: idleContent,
@@ -108,7 +108,7 @@ export async function renderAuth(screen, navigate) {
     started = true;
 
     box.setContent(
-      "\n{center}{cyan-fg}{bold}devDex 𓏵‧₊˚ ┊{/bold}{/cyan-fg}{/center}\n\n\n" +
+      "\n{center}{#3DA5D9-fg}{bold}devDex 𓏵‧₊˚ ┊{/bold}{/#3DA5D9-fg}{/center}\n\n\n" +
         "{center}{white-fg}opening GitHub in your browser...{/white-fg}{/center}\n\n" +
         "{center}{gray-fg}finish signing in, then come back here{/gray-fg}{/center}"
     );
