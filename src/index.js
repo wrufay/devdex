@@ -4,7 +4,7 @@ import { createNavigate } from "./app.js";
 
 export const screen = blessed.screen({
   smartCSR: true,
-  title: "Flashcards",
+  title: "devdex",
   fullUnicode: false,
 });
 

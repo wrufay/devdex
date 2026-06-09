@@ -1,11 +1,11 @@
 {
-  "name": "flashcards",
+  "name": "devdex",
   "version": "1.0.0",
-  "description": "Barebones terminal flashcards with GitHub auth, Supabase, and SM-2 spaced repetition",
+  "description": "devdex — spaced repetition flashcards in your terminal (GitHub auth, Supabase, SM-2)",
   "main": "src/index.js",
   "type": "module",
   "bin": {
-    "flashcards": "./src/index.js"
+    "devdex": "./src/index.js"
   },
   "scripts": {
     "start": "node src/index.js",
