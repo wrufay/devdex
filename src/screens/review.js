@@ -50,7 +50,11 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
   });
 
   screen.append(box);
-  box.focus();
+  // Focus the scrollablebox (not the outer box): blessed only delivers keys to
+  // the focused element, and `content` steals focus when a long card scrolls.
+  // Keeping focus + all controls on `content` means scrolling and the rating
+  // keys never fight over focus.
+  content.focus();
 
   let cards;
   try {
@@ -58,7 +62,7 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
   } catch (err) {
     content.setContent(`{red-fg}${err.message}{/red-fg}`);
     footer.setContent("{gray-fg}Esc = back{/gray-fg}");
-    box.key(["escape"], () => navigate("menu"));
+    content.key(["escape"], () => navigate("menu"));
     screen.render();
     return;
   }
@@ -68,7 +72,7 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
       "{green-fg}{bold}all caught up.{/bold}{/green-fg}\n\nno cards are due for review."
     );
     footer.setContent("{gray-fg}Esc = back to menu{/gray-fg}");
-    box.key(["escape"], () => navigate("menu"));
+    content.key(["escape"], () => navigate("menu"));
     screen.render();
     return;
   }
@@ -127,12 +131,12 @@ export async function renderReview(screen, navigate, { deck, all } = {}) {
     showFront();
   }
 
-  box.key(["escape"], () => navigate("menu"));
-  box.key(["space", "enter"], () => {
+  content.key(["escape"], () => navigate("menu"));
+  content.key(["space", "enter"], () => {
     if (!showingBack) showBack();
   });
   for (const r of RATINGS) {
-    box.key([r.key], () => {
+    content.key([r.key], () => {
       if (showingBack) rate(r.quality);
     });
   }
