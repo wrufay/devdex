@@ -1,4 +1,4 @@
-# _devDex_ 𓏵‧₊˚ ┊ flashcards in your terminal
+# _devDex_ 𓏵‧₊˚ ┊ flashcards tui, made for devs
 
 ### hey dev... how's it been?
 
@@ -20,7 +20,7 @@ with **_devDex_**, review + learn + memorize all without leaving your favourite 
 
 powered by spaced repetition, it's like Anki - but integrated seamlessly into your everyday workflow. building up here 🧠 and down here 💻 in parallel.
 
-## ಄ motive
+## ➜ the motive behind the meta
 
 **llm thinking time:** why scroll when you can flip?
 
@@ -45,7 +45,7 @@ powered by spaced repetition, it's like Anki - but integrated seamlessly into yo
 - **[Supabase](https://supabase.com) - GitHub OAuth + Postgres** auth and db
 - **SM-2, hand-rolled** spaced repetition algorithm
 
-## ꕤ what's under the hood, explained
+## ꕤ under the hood, explained
 
 **SM-2 algo**
 every card carries four numbers: `repetitions`, `ease_factor` (starts at 2.5), `interval`, and `next_review`. when you rate a card:
@@ -64,7 +64,7 @@ two tables (`decks`, `cards`) with row-level security, so you only ever see your
 **neo-blessed.**
 the whole thing is a TUI: centered panels, cyan borders, arrow-key lists, fully keyboard-driven. handles terminal resize, runs anywhere a terminal does.
 
-## ಄ nav tips
+## ⌞ ⌝ nav tips
 
 | where               | keys                                                                                  |
 | ------------------- | ------------------------------------------------------------------------------------- |
