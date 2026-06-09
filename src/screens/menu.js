@@ -22,7 +22,7 @@ export async function renderMenu(screen, navigate) {
     border: { type: "line" },
     style: { border: { fg: "cyan" } },
     tags: true,
-    label: " cli_cards.git ",
+    label: " tui_cards.git ",
   });
 
   const list = blessed.list({
