@@ -24,7 +24,7 @@ const PAGE_CSS = `
 function htmlPage(inner) {
   return `<!DOCTYPE html><html lang="en"><head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>devdex</title>
+    <title>devDex</title>
     <style>${PAGE_CSS}</style>
   </head><body>${inner}</body></html>`;
 }
@@ -78,9 +78,8 @@ export async function renderAuth(screen, navigate) {
   }
 
   const idleContent =
-    "\n{center}{cyan-fg}{bold}devdex{/bold}{/cyan-fg}{/center}\n\n" +
+    "\n{center}{cyan-fg}{bold}welcome to devDex 𓏵‧₊˚ ┊{/bold}{/cyan-fg}{/center}\n\n" +
     "{center}spaced repetition flashcards, in your terminal{/center}\n\n" +
-    "{center}{gray-fg}GitHub login, saved to Supabase{/gray-fg}{/center}\n\n" +
     "{center}{gray-fg}press Enter to sign in with GitHub{/gray-fg}{/center}";
 
   const box = blessed.box({
@@ -108,7 +107,7 @@ export async function renderAuth(screen, navigate) {
     started = true;
 
     box.setContent(
-      "\n{center}{cyan-fg}{bold}devdex{/bold}{/cyan-fg}{/center}\n\n\n" +
+      "\n{center}{cyan-fg}{bold}devDex 𓏵‧₊˚ ┊{/bold}{/cyan-fg}{/center}\n\n\n" +
         "{center}{white-fg}opening GitHub in your browser...{/white-fg}{/center}\n\n" +
         "{center}{gray-fg}finish signing in, then come back here{/gray-fg}{/center}"
     );

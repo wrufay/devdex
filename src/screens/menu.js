@@ -14,7 +14,6 @@ export async function renderMenu(screen, navigate) {
     dueCount = (await dueCards()).length;
   } catch {}
 
-  // Entire login container
   const box = blessed.box({
     top: "center",
     left: "center",
@@ -26,59 +25,83 @@ export async function renderMenu(screen, navigate) {
     label: " devdex.git ",
   });
 
+  // Menu rows. `null` = a blank spacer. Each real row is { label, run }.
+  const rows = [
+    {
+      label: `review now {gray-fg}(${dueCount} due){/gray-fg}`,
+      run: () => navigate("decks", { pick: "review" }),
+    },
+    { label: "new card", run: () => navigate("decks", { pick: "create" }) },
+    { label: "my decks", run: () => navigate("decks") },
+    null,
+    {
+      label: "SIGN OUT",
+      run: async () => {
+        await supabase.auth.signOut();
+        navigate("auth");
+      },
+    },
+    {
+      label: "QUIT",
+      run: () => {
+        screen.destroy();
+        process.exit(0);
+      },
+    },
+  ];
+
+  const MARKER = "ꕤ "; // shown in front of the selected row
+  const PAD = " ".repeat(MARKER.length); // keep unselected rows aligned
+
   const list = blessed.list({
     parent: box,
     top: 4,
     left: 2,
     right: 2,
     bottom: 1,
-    keys: true,
-    vi: true,
+    keys: false, // we drive nav so the marker follows the cursor + hops the spacer
     tags: true,
     style: {
       selected: { bg: "blue", fg: "white" },
       item: { fg: "white" },
     },
-    items: [
-      `Review {gray-fg}(${dueCount} due){/gray-fg}`,
-      "New card",
-      "My decks",
-      "SIGN OUT",
-      "QUIT",
-    ],
   });
+
+  let sel = 0; // current row index (never a null spacer)
+
+  // Rebuild the rows so only the selected one wears the marker.
+  function draw() {
+    list.setItems(
+      rows.map((r, i) =>
+        r === null ? "" : (i === sel ? MARKER : PAD) + r.label
+      )
+    );
+    list.select(sel);
+    screen.render();
+  }
+
+  // Move selection, skipping over any null spacer rows.
+  function step(dir) {
+    let i = sel;
+    do {
+      i = (i + dir + rows.length) % rows.length;
+    } while (rows[i] === null);
+    sel = i;
+    draw();
+  }
 
   box.setContent(
     `{cyan-fg}{bold}welcome back, ${name}{/bold}{/cyan-fg}\n` +
-      `{gray-fg}Arrow keys + Enter to select · Ctrl-C to quit{/gray-fg}`
+      `{gray-fg}arrow keys + Enter to select · Ctrl-C to quit{/gray-fg}`
   );
 
   screen.append(box);
   capHeight(screen, box, 20); // up to 20 rows, but shrinks on short terminals
   list.focus();
 
-  list.on("select", async (_item, index) => {
-    switch (index) {
-      case 0:
-        // Pick a deck to review (the decks screen offers an "all decks" option).
-        navigate("decks", { pick: "review" });
-        break;
-      case 1:
-        // Pick a deck to add the new card to.
-        navigate("decks", { pick: "create" });
-        break;
-      case 2:
-        navigate("decks");
-        break;
-      case 3:
-        await supabase.auth.signOut();
-        navigate("auth");
-        break;
-      case 4:
-        screen.destroy();
-        process.exit(0);
-    }
-  });
+  list.key(["up", "k"], () => step(-1));
+  list.key(["down", "j"], () => step(1));
+  list.key(["enter"], () => rows[sel]?.run());
 
-  screen.render();
+  draw();
 }
