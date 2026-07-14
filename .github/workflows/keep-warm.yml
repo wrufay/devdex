@@ -1,0 +1,24 @@
+name: keep supabase warm
+
+# Supabase pauses free projects after 7 days of inactivity, which takes devdex's
+# backend offline. This pings the database on a schedule so it never idles long
+# enough to get paused. Credentials live in GitHub Secrets, not in the workflow.
+on:
+  schedule:
+    - cron: "0 8 * * *" # daily at 08:00 UTC (well inside the 7-day window)
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ping the supabase rest api
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/decks?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+          echo "supabase responded with HTTP $code"
+          # any real response (2xx-4xx) means the project is awake and counted the
+          # request as activity; 000 (DNS fail) or 5xx means it's paused/down.
+          test "$code" -ge 200 -a "$code" -lt 500
