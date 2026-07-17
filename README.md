@@ -1,82 +1,95 @@
-# _devDex_ 𓏵‧₊˚ ┊ flashcards tui, for devs
+# devDex ꕤ flashcards TUI
 
-### hey dev... how's it been?
+### *hey dev... how's it been?*
 
-no no, not your code, work, or side projects. how have YOU been.
+*no no, not your code, work, or side projects. how have YOU been.*
 
-**how long has it _really_ been since you tended to:**
+### *how long has it really been since you tended to:*
 
-༝ that language you've always wanted to learn
+*༝ that language you've always wanted to learn*
 
-༝ the scriptures you can never seem to memorize
+*༝ the scriptures you can never seem to memorize*
 
-༝ those niche interests that just never get your time ˙◠˙
+*༝ those niche interests that just never get your time*
 
-### i get you with the grind but... there's more to life than that llm 😭
-
-<br>
-
-## and more to the terminal than meets the command line.
-
-with **_devDex_**, review + learn + memorize all without leaving your favourite text editor.
-
-powered by spaced repetition, it's like Anki - but integrated seamlessly into your everyday workflow. building up here 🧠 and down here 💻 in parallel.
+### *i get you with the grind but... there's more to life than that LLM* 😭✌️
 
 <br>
 
-## ➜ the motive behind the meta
-
-**llm thinking time:** why scroll when you can flip?
-
-**reduce friction:** no resistance. take a break from building, coding & spend 2 minutes on something you wanna master.
-
-**minimalist:** no gui, no popup window, no browser. a text-based user interface is enough to get those gears turning and that streak burning
+##  devDex is a terminal-based UI that lets you memorize, recall & learn all without leaving your favourite text editor.
 
 <br>
 
-## ꕤ features
+## motive
 
-- **cards and decks** - traditional front and back. create, review, update, delete; full CRUD, Deck's Version
+- **claude thinking time:** why scroll when you can flip?
 
-- **spaced repetition** - the meta for active recall. each card is scheduled so it comes back _right before_ you'd forget it. all for less cramming, more remembering!
+- **no resistance.** imagine: 2 min coding break, 2 mins closer to mastering something.
 
-- **review sessions** - pick a deck, go through what's due, respond with how well you knew it.
-
-- **saved to the cloud** - log in with GitHub. your cards are for you, and with you - wherever you go.
+- **minimalist.** no GUI to see 'round here!
 
 <br>
 
-## ꕤ built with:
+## current features
 
-- **Node.js** runtime
-- **[neo-blessed](https://github.com/embarklabs/neo-blessed)** ui
-- **[Supabase](https://supabase.com) - GitHub OAuth + Postgres** auth and db
-- **SM-2, hand-rolled** spaced repetition algorithm
 
-<br>
+- **make decks and cards** with a few keystrokes
 
-## ꕤ under the hood, explained
+- tells you what to review with the **spaced repetition** algorithm
 
-**SM-2 algo**
-every card carries four numbers: `repetitions`, `ease_factor` (starts at 2.5), `interval`, and `next_review`. when you rate a card:
+- **cloud-synced storage** keeps your cards in your pocket, wherever you go 
 
-- **again** (forgot) → the card resets, you see it again tomorrow, and its ease takes a hit.
-- **hard / good / easy** → the interval grows `1 day → 6 days → interval × ease`, and the ease nudges up or down based on how it felt.
+    (assuming you have a terminal in your pocket, of course.)
 
-so the harder a card is for you, the more often it comes back; the easier it is, the longer it rests.
-
-**GitHub OAuth**
-devDex spins up a mini local http server on `localhost:54321`, opens GitHub in your browser, catches the redirect, and trades the code for a session (PKCE flow via Supabase). the session is cached to `~/.study-terminal/` so you stay logged in between runs.
-
-**Supabase Postgres.**
-two tables (`decks`, `cards`) with row-level security, so you only ever see your own stuff. each card's scheduling state lives right on its row, so "what should i study today?" is just a query for what's due.
-
-**neo-blessed.**
-the whole thing is a TUI: centered panels, sky-blue borders, arrow-key lists, fully keyboard-driven. handles terminal resize, runs anywhere a terminal does.
 
 <br>
 
-## ⌞ ⌝ nav tips
+
+## v2 features (aka stuff i want)
+
+- built-in **note-taker** lets you take a brain dump break alongside the cards
+ 
+- **quick-action hotkeys**, like *q* to exit, to make UX smoother and your life easier
+
+- more flexibility with **deck sections** for organization and **cards with text input** to enhance muscle memory
+
+<br>
+
+## how SM-2 (spaced repetition) works
+
+devDex cards have a property called `ease_factor`.
+
+After reviewing a card, you provide it a rating: **again**, **hard**, **good**, or **easy**.
+
+
+Each rating maps to a different behaviour:
+- **again** = interval resets, you see it again tomorrow.
+
+- **hard / good / easy** = interval grows `1 day / 6 days / interval × ease`, where `ease` (starting at 2.5) gets updated based on the rating you gave.
+
+
+In short, this algorithm feeds you the cards you keep forgetting more often, and holds off on the ones you've got down pat.
+
+Like a **personal tutor** keeping track of how you've been performing.
+
+
+<br>
+
+## try it, run it 🏃‍♂️
+
+```bash
+git clone https://github.com/wrufay/devdex.git
+cd devdex
+npm install
+npm link
+devdex
+```
+
+Run devDex by typing `devdex` into your terminal from any directory.
+
+<br>
+
+## Guide
 
 | where               | keys                                                                                  |
 | ------------------- | ------------------------------------------------------------------------------------- |
@@ -88,28 +101,15 @@ the whole thing is a TUI: centered panels, sky-blue borders, arrow-key lists, fu
 
 <br>
 
-## run it 🏃‍♂️
+## Built with
 
-too simple. clone -> nav in -> install -> start.
-
-```bash
-git clone https://github.com/wrufay/devdex.git
-cd devdex
-npm install
-npm start
-```
-
-want to type `devdex` from anywhere instead of `npm start`? link it once:
-
-```bash
-npm link
-devdex
-```
-
-first run opens GitHub to sign in. once you approve it, come back to your terminal & you're ready to go!
+- Node.js
+- [neo-blessed](https://github.com/embarklabs/neo-blessed)
+- Supabase
+- GitHub OAuth
 
 <br>
 
-## something to ask, suggest or contribute?
+## Got questions or suggestions?
 
-**lmk, i'm all ears ˙ᵕ˙** f26wu@uwaterloo[dot]ca
+Tell me now. f26wu@uwaterloo[dot]ca
