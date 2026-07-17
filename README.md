@@ -20,7 +20,7 @@
 
 <br>
 
-## motive
+## Motive
 
 - **claude thinking time:** why scroll when you can flip?
 
@@ -30,7 +30,8 @@
 
 <br>
 
-## current features
+
+## Features: current
 
 
 - **make decks and cards** with a few keystrokes
@@ -45,7 +46,7 @@
 <br>
 
 
-## v2 features (aka stuff i want)
+## Features: V2 (aka stuff i want)
 
 - built-in **note-taker** lets you take a brain dump break alongside the cards
  
@@ -55,7 +56,7 @@
 
 <br>
 
-## how SM-2 (spaced repetition) works
+## How SM-2 (spaced repetition) works
 
 devDex cards have a property called `ease_factor`.
 
@@ -75,7 +76,7 @@ Like a **personal tutor** keeping track of how you've been performing.
 
 <br>
 
-## try it, run it 🏃‍♂️
+## Try it, run it 🏃‍♂️
 
 ```bash
 git clone https://github.com/wrufay/devdex.git
