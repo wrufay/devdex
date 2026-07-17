@@ -18,6 +18,9 @@
 
 ##  devDex is a terminal-based UI that lets you memorize, recall & learn all without leaving your favourite text editor.
 
+[![devDex demo](https://img.youtube.com/vi/If2QzkVFCLk/maxresdefault.jpg)](https://youtu.be/If2QzkVFCLk)
+
+
 <br>
 
 ## Motive
